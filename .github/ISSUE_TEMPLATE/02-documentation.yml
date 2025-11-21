@@ -3,7 +3,7 @@ body:
       description: If any of these required steps are not taken, we may not be able to review your issue. Help us to help you!
       label: Documentation Report Checklist
       options:
-        - label: I have [searched for related issues](https://github.com//nikado/issues?q=is%3Aissue) and found none that matched my issue.
+        - label: I have [searched for related issues](https://github.com/nicoespeon/nikado/issues?q=is%3Aissue) and found none that matched my issue.
           required: true
     type: checkboxes
   - attributes:
