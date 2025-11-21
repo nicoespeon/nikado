@@ -8,18 +8,12 @@ cd nikado
 pnpm install
 ```
 
-## Building
+## Running locally
 
-Run [**tsdown**](https://tsdown.dev) locally to build source files from `src/` into output files in `lib/`:
-
-```shell
-pnpm build
-```
-
-Add `--watch` to run the builder in a watch mode that continuously cleans and recreates `lib/` as you save files:
+Run the Vite development server to work on the app locally:
 
 ```shell
-pnpm build --watch
+pnpm dev
 ```
 
 ## Formatting
@@ -47,8 +41,6 @@ For example, ESLint can be run with `--fix` to auto-fix some lint rule complaint
 ```shell
 pnpm run lint --fix
 ```
-
-Note that you'll need to run `pnpm build` before `pnpm lint` so that lint rules which check the file system can pick up on any built files.
 
 ## Testing
 
@@ -82,4 +74,20 @@ Add `--watch` to keep the type checker running in a watch mode that updates the 
 
 ```shell
 pnpm tsc --watch
+```
+
+## Building
+
+Build the application for production using Vite:
+
+```shell
+pnpm build
+```
+
+This will create optimized static files in the `dist/` directory, ready for deployment.
+
+You can preview the production build locally:
+
+```shell
+pnpm preview
 ```
