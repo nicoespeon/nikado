@@ -4,7 +4,14 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
 	{
-		ignores: ["**/*.snap", "coverage", "lib", "node_modules", "pnpm-lock.yaml"],
+		ignores: [
+			"**/*.snap",
+			"coverage",
+			"dist",
+			"lib",
+			"node_modules",
+			"pnpm-lock.yaml",
+		],
 	},
 	{ linterOptions: { reportUnusedDisableDirectives: "error" } },
 	eslint.configs.recommended,
@@ -13,7 +20,7 @@ export default tseslint.config(
 			tseslint.configs.strictTypeChecked,
 			tseslint.configs.stylisticTypeChecked,
 		],
-		files: ["**/*.{js,ts}"],
+		files: ["**/*.{js,ts,tsx}"],
 		languageOptions: {
 			parserOptions: {
 				projectService: { allowDefaultProject: ["*.config.*s"] },

@@ -10,7 +10,11 @@ function App() {
 				<h1>Welcome to Nikado</h1>
 				<p>A React + TypeScript application</p>
 				<div className="card">
-					<button onClick={() => setCount((count) => count + 1)}>
+					<button
+						onClick={() => {
+							setCount((count) => count + 1);
+						}}
+					>
 						count is {count}
 					</button>
 				</div>

@@ -13,15 +13,18 @@
 		"test": "vitest",
 		"tsc": "tsc"
 	},
+	"lint-staged": {
+		"*": "prettier --ignore-unknown --write"
+	},
 	"dependencies": {
 		"react": "19.2.0",
 		"react-dom": "19.2.0"
 	},
-	"lint-staged": {
-		"*": "prettier --ignore-unknown --write"
-	},
 	"devDependencies": {
 		"@eslint/js": "9.29.0",
+		"@testing-library/jest-dom": "6.9.1",
+		"@testing-library/react": "16.3.0",
+		"@testing-library/user-event": "14.6.1",
 		"@types/node": "24.0.4",
 		"@types/react": "19.2.6",
 		"@types/react-dom": "19.2.3",
@@ -31,6 +34,7 @@
 		"console-fail-test": "0.5.0",
 		"eslint": "9.29.0",
 		"husky": "9.1.7",
+		"jsdom": "27.2.0",
 		"lint-staged": "16.1.2",
 		"prettier": "3.6.1",
 		"typescript": "5.8.3",
