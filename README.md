@@ -19,3 +19,23 @@ See [`.github/CONTRIBUTING.md`](./.github/CONTRIBUTING.md), then [`.github/DEVEL
 Thanks! 💖
 
 > 💝 This package was templated with [`create-typescript-app`](https://github.com/JoshuaKGoldberg/create-typescript-app) using the [Bingo framework](https://create.bingo).
+
+## Contributors
+
+<!-- spellchecker: disable -->
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center"><a href="https://understandlegacycode.com/"><img src="https://avatars.githubusercontent.com/u/1094774?v=4?s=100" width="100px;" alt="Nicolas Carlo"/><br /><sub><b>Nicolas Carlo</b></sub></a><br /><a href="https://github.com/nicoespeon/nikado/commits?author=nicoespeon" title="Code">💻</a> <a href="https://github.com/nicoespeon/nikado/commits?author=nicoespeon" title="Documentation">📖</a> <a href="#ideas-nicoespeon" title="Ideas, Planning, & Feedback">🤔</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+<!-- spellchecker: enable -->
