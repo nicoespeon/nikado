@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 10
+    # Group all minor and patch updates together
+    groups:
+      dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Add any packages you want to exclude from updates here
+      # Example:
+      # - dependency-name: "package-name"
+      #   versions: ["1.x"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
