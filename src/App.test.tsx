@@ -1,30 +1,49 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import App from "./App";
 
 describe("App", () => {
-	afterEach(() => {
+	beforeEach(() => {
 		cleanup();
 	});
 
-	it("renders welcome message", () => {
+	it("renders ReactFlow canvas", () => {
 		render(<App />);
-		expect(screen.getByText("Welcome to Nikado")).toBeInTheDocument();
+		const canvas = document.querySelector(".react-flow");
+		expect(canvas).toBeInTheDocument();
 	});
 
-	it("displays initial count", () => {
+	it("renders with empty canvas initially", () => {
 		render(<App />);
-		expect(screen.getByText(/count is 0/i)).toBeInTheDocument();
+		const nodes = document.querySelectorAll(".react-flow__node");
+		expect(nodes).toHaveLength(0);
 	});
 
-	it("increments count when button is clicked", async () => {
+	it("creates a new node on double-click", async () => {
 		const user = userEvent.setup();
 		render(<App />);
 
-		const button = screen.getByRole("button", { name: /count is 0/i });
-		await user.click(button);
+		const canvas = document.querySelector(".react-flow__pane");
+		expect(canvas).toBeInTheDocument();
 
-		expect(screen.getByText(/count is 1/i)).toBeInTheDocument();
+		if (canvas) {
+			await user.dblClick(canvas);
+
+			const nodes = document.querySelectorAll(".react-flow__node");
+			expect(nodes.length).toBeGreaterThan(0);
+		}
+	});
+
+	it("displays controls panel", () => {
+		render(<App />);
+		const controls = document.querySelector(".react-flow__controls");
+		expect(controls).toBeInTheDocument();
+	});
+
+	it("displays background pattern", () => {
+		render(<App />);
+		const background = document.querySelector(".react-flow__background");
+		expect(background).toBeInTheDocument();
 	});
 });
