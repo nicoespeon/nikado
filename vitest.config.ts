@@ -12,6 +12,6 @@ export default defineConfig({
 		},
 		environment: "jsdom",
 		exclude: ["lib", "node_modules"],
-		setupFiles: ["console-fail-test/setup", "./src/test-setup.ts"],
+		setupFiles: ["./src/test-setup.ts"],
 	},
 });
