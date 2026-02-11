@@ -1,0 +1,9 @@
+{
+	"permissions": {
+		"allow": [
+			"Bash(pnpm test:*)",
+			"Bash(pnpm lint:*)",
+			"WebFetch(domain:reactflow.dev)"
+		]
+	}
+}
