@@ -1,17 +1,18 @@
-import { useCallback, useState } from "react";
-import ReactFlow, {
+import {
 	addEdge,
 	Background,
-	Connection,
 	Controls,
-	Node,
+	ReactFlow,
 	useEdgesState,
 	useNodesState,
-} from "reactflow";
-import "reactflow/dist/style.css";
+	type Connection,
+	type Node,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import { useCallback, useState } from "react";
 
 function App() {
-	const [nodes, setNodes, onNodesChange] = useNodesState([]);
+	const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
 	const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 	const [nodeId, setNodeId] = useState(0);
 
@@ -47,14 +48,13 @@ function App() {
 	);
 
 	return (
-		<div className="w-full h-full bg-gray-50">
+		<div className="w-full h-full bg-gray-50" onClick={createNodeOnDoubleClick}>
 			<ReactFlow
 				nodes={nodes}
 				edges={edges}
 				onNodesChange={onNodesChange}
 				onEdgesChange={onEdgesChange}
 				onConnect={createEdge}
-				onPaneClick={createNodeOnDoubleClick}
 				// Figma-like tool controls
 				// Also, panOnDrag should be false for tests to work until https://github.com/testing-library/user-event/pull/1306 is released
 				selectionOnDrag={true}

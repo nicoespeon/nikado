@@ -1,4 +1,4 @@
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { App } from "./App";
@@ -24,14 +24,16 @@ describe("App", () => {
 		const user = userEvent.setup();
 		render(<App />);
 
-		const canvas = document.querySelector(".react-flow__pane");
+		const canvas = document.querySelector(".react-flow");
 		expect(canvas).toBeInTheDocument();
 
 		if (canvas) {
 			await user.dblClick(canvas);
 
-			const nodes = document.querySelectorAll(".react-flow__node");
-			expect(nodes.length).toBeGreaterThan(0);
+			await waitFor(() => {
+				const nodes = document.querySelectorAll(".react-flow__node");
+				expect(nodes.length).toBeGreaterThan(0);
+			});
 		}
 	});
 
