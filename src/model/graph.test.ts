@@ -2,12 +2,93 @@ import { describe, expect, test } from "vitest";
 import {
 	addDependency,
 	canMarkDone,
+	createGoal,
 	createTask,
 	findLeafTasks,
 	removeTask,
+	setTaskLabel,
 	setTaskStatus,
 	type MikadoGraph,
 } from "./graph";
+
+describe("createGoal", () => {
+	test("adds a goal task to an empty graph", () => {
+		const graph = emptyGraph();
+
+		const result = createGoal(graph, "Refactor auth module");
+
+		expect(result).toMatchObject({
+			goalId: expect.any(String),
+			tasks: [
+				{
+					id: expect.any(String),
+					label: "Refactor auth module",
+					status: "pending",
+				},
+			],
+		});
+		expect(result.goalId).toBe(result.tasks[0].id);
+	});
+
+	test("returns the graph unchanged when a goal already exists", () => {
+		const graph = emptyGraph();
+		const withGoal = createGoal(graph, "First goal");
+
+		const result = createGoal(withGoal, "Second goal");
+
+		expect(result).toBe(withGoal);
+	});
+
+	test("does not mutate the original graph", () => {
+		const graph = emptyGraph();
+
+		const result = createGoal(graph, "My goal");
+
+		expect(graph.goalId).toBeNull();
+		expect(graph.tasks).toEqual([]);
+		expect(result).not.toBe(graph);
+	});
+});
+
+describe("setTaskLabel", () => {
+	test("updates the label of the specified task", () => {
+		const task = createTask("Old label");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			tasks: [task],
+		};
+
+		const result = setTaskLabel(graph, task.id, "New label");
+
+		expect(result.tasks).toEqual([{ ...task, label: "New label" }]);
+	});
+
+	test("does not affect other tasks", () => {
+		const task1 = createTask("First");
+		const task2 = createTask("Second");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			tasks: [task1, task2],
+		};
+
+		const result = setTaskLabel(graph, task1.id, "Updated");
+
+		expect(result.tasks).toEqual([{ ...task1, label: "Updated" }, task2]);
+	});
+
+	test("does not mutate the original graph", () => {
+		const task = createTask("Original");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			tasks: [task],
+		};
+
+		const result = setTaskLabel(graph, task.id, "Changed");
+
+		expect(graph.tasks[0].label).toBe("Original");
+		expect(result).not.toBe(graph);
+	});
+});
 
 describe("createTask", () => {
 	test("returns a task with the given label and pending status", () => {

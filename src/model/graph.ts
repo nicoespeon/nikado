@@ -21,6 +21,28 @@ export type MikadoGraph = {
 	dependencies: Dependency[];
 };
 
+export function createGoal(graph: MikadoGraph, label: string) {
+	if (graph.goalId !== null) return graph;
+
+	const task = createTask(label);
+	return {
+		...graph,
+		goalId: task.id,
+		tasks: [...graph.tasks, task],
+	};
+}
+
+export function setTaskLabel(
+	graph: MikadoGraph,
+	taskId: TaskId,
+	label: string,
+) {
+	return {
+		...graph,
+		tasks: graph.tasks.map((t) => (t.id === taskId ? { ...t, label } : t)),
+	};
+}
+
 export function removeTask(graph: MikadoGraph, taskId: TaskId) {
 	const idsToRemove = collectDescendantsToRemove(graph, taskId);
 
