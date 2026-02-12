@@ -5,7 +5,10 @@ import {
 	canMarkDone,
 	createGoal,
 	createTask,
+	findChildren,
 	findLeafTasks,
+	findParent,
+	findSiblings,
 	removeTask,
 	setTaskLabel,
 	setTaskStatus,
@@ -405,5 +408,108 @@ describe("findLeafTasks", () => {
 		const graph = emptyGraph();
 
 		expect(findLeafTasks(graph)).toEqual([]);
+	});
+});
+
+describe("findParent", () => {
+	test("returns null for the root task", () => {
+		const goal = createTask("Goal");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal],
+		};
+
+		expect(findParent(graph, goal.id)).toBeNull();
+	});
+
+	test("returns the parent task ID for a child", () => {
+		const goal = createTask("Goal");
+		const child = createTask("Child");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child],
+			dependencies: [{ from: goal.id, to: child.id }],
+		};
+
+		expect(findParent(graph, child.id)).toBe(goal.id);
+	});
+
+	test("returns the first parent when a task has multiple parents", () => {
+		const a = createTask("A");
+		const b = createTask("B");
+		const shared = createTask("Shared");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: a.id,
+			tasks: [a, b, shared],
+			dependencies: [
+				{ from: a.id, to: shared.id },
+				{ from: b.id, to: shared.id },
+			],
+		};
+
+		expect(findParent(graph, shared.id)).toBe(a.id);
+	});
+});
+
+describe("findChildren", () => {
+	test("returns direct children of a task", () => {
+		const parent = createTask("Parent");
+		const child1 = createTask("Child 1");
+		const child2 = createTask("Child 2");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			tasks: [parent, child1, child2],
+			dependencies: [
+				{ from: parent.id, to: child1.id },
+				{ from: parent.id, to: child2.id },
+			],
+		};
+
+		expect(findChildren(graph, parent.id)).toEqual([child1.id, child2.id]);
+	});
+
+	test("returns empty array for leaf tasks", () => {
+		const leaf = createTask("Leaf");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			tasks: [leaf],
+		};
+
+		expect(findChildren(graph, leaf.id)).toEqual([]);
+	});
+});
+
+describe("findSiblings", () => {
+	test("returns empty array for the root task", () => {
+		const goal = createTask("Goal");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal],
+		};
+
+		expect(findSiblings(graph, goal.id)).toEqual([]);
+	});
+
+	test("returns other children of the same parent", () => {
+		const goal = createTask("Goal");
+		const c1 = createTask("C1");
+		const c2 = createTask("C2");
+		const c3 = createTask("C3");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, c1, c2, c3],
+			dependencies: [
+				{ from: goal.id, to: c1.id },
+				{ from: goal.id, to: c2.id },
+				{ from: goal.id, to: c3.id },
+			],
+		};
+
+		expect(findSiblings(graph, c2.id)).toEqual([c1.id, c3.id]);
 	});
 });

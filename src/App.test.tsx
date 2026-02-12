@@ -2,6 +2,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import { App } from "./App";
+import type { TaskId } from "./model/graph";
 import { useGraphStore } from "./store/graph-store";
 
 function getCanvas() {
@@ -10,17 +11,37 @@ function getCanvas() {
 	return canvas;
 }
 
+function resetStore() {
+	useGraphStore.setState({
+		goalId: null,
+		tasks: [],
+		dependencies: [],
+		editingNodeId: null,
+		selectedNodeId: null,
+	});
+}
+
+function getGoalId() {
+	const { goalId } = useGraphStore.getState();
+	if (!goalId) throw new Error("No goal exists");
+	return goalId;
+}
+
+function selectNode(taskId: TaskId) {
+	useGraphStore.getState().selectNode(taskId);
+}
+
 describe("App", () => {
 	afterEach(() => {
 		cleanup();
-		useGraphStore.setState({ goalId: null, tasks: [], dependencies: [] });
+		resetStore();
 	});
 
 	it("shows instruction when canvas is empty", () => {
 		render(<App />);
 
 		expect(
-			screen.getByText(/double-click or press enter to create your goal/i),
+			screen.getByText(/double-click or press space to create your goal/i),
 		).toBeInTheDocument();
 	});
 
@@ -32,7 +53,7 @@ describe("App", () => {
 
 		await waitFor(() => {
 			expect(
-				screen.queryByText(/double-click or press enter to create your goal/i),
+				screen.queryByText(/double-click or press space to create your goal/i),
 			).not.toBeInTheDocument();
 		});
 	});
@@ -128,18 +149,18 @@ describe("App", () => {
 		});
 	});
 
-	it("creates a goal with Enter key", async () => {
+	it("creates a goal with Space key", async () => {
 		const user = userEvent.setup();
 		render(<App />);
 
-		await user.keyboard("{Enter}");
+		await user.keyboard(" ");
 
 		await waitFor(() => {
 			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
 		});
 	});
 
-	it("adds a sub-task when clicking the + button on a task", async () => {
+	it("focuses goal and enters edit mode when pressing Space with existing goal", async () => {
 		const user = userEvent.setup();
 		render(<App />);
 
@@ -152,19 +173,41 @@ describe("App", () => {
 			expect(screen.getByText("My Goal")).toBeInTheDocument();
 		});
 
-		await user.click(screen.getByLabelText("Add sub-task"));
+		await user.keyboard(" ");
+
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+	});
+
+	it("creates a sub-task with Tab when a node is selected", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("My Goal{Enter}");
+		await waitFor(() => {
+			expect(screen.getByText("My Goal")).toBeInTheDocument();
+		});
+
+		selectNode(getGoalId());
+		await user.keyboard("{Tab}");
 
 		await waitFor(() => {
 			const nodes = document.querySelectorAll(".react-flow__node");
 			expect(nodes).toHaveLength(2);
 		});
-		expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		expect(useGraphStore.getState().dependencies).toHaveLength(1);
 	});
 
-	it("creates a dependency edge when adding a sub-task", async () => {
+	it("creates a sibling with Enter when a non-root node is selected", async () => {
 		const user = userEvent.setup();
 		render(<App />);
 
+		// Create goal
 		await user.dblClick(getCanvas());
 		await waitFor(() => {
 			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
@@ -174,27 +217,9 @@ describe("App", () => {
 			expect(screen.getByText("Goal")).toBeInTheDocument();
 		});
 
-		await user.click(screen.getByLabelText("Add sub-task"));
-
-		await waitFor(() => {
-			expect(useGraphStore.getState().dependencies).toHaveLength(1);
-		});
-	});
-
-	it("adds a sub-task to a sub-task (nested)", async () => {
-		const user = userEvent.setup();
-		render(<App />);
-
-		await user.dblClick(getCanvas());
-		await waitFor(() => {
-			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
-		});
-		await user.keyboard("Goal{Enter}");
-		await waitFor(() => {
-			expect(screen.getByText("Goal")).toBeInTheDocument();
-		});
-
-		await user.click(screen.getByLabelText("Add sub-task"));
+		// Create subtask via Tab
+		selectNode(getGoalId());
+		await user.keyboard("{Tab}");
 		await waitFor(() => {
 			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
 		});
@@ -203,13 +228,78 @@ describe("App", () => {
 			expect(screen.getByText("Sub 1")).toBeInTheDocument();
 		});
 
-		const addButtons = screen.getAllByLabelText("Add sub-task");
-		await user.click(addButtons[1]);
+		// Select Sub 1, press Enter to create sibling
+		selectNode(useGraphStore.getState().tasks[1].id);
+		await user.keyboard("{Enter}");
 
 		await waitFor(() => {
 			const nodes = document.querySelectorAll(".react-flow__node");
 			expect(nodes).toHaveLength(3);
 			expect(useGraphStore.getState().dependencies).toHaveLength(2);
+		});
+	});
+
+	it("enters edit mode with 'e' key when a node is selected", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => {
+			expect(screen.getByText("Goal")).toBeInTheDocument();
+		});
+
+		selectNode(getGoalId());
+		await user.keyboard("e");
+
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+	});
+
+	it("enters edit mode with F2 when a node is selected", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => {
+			expect(screen.getByText("Goal")).toBeInTheDocument();
+		});
+
+		selectNode(getGoalId());
+		await user.keyboard("{F2}");
+
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+	});
+
+	it("does nothing on Enter when root node is selected", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => {
+			expect(screen.getByText("Goal")).toBeInTheDocument();
+		});
+
+		selectNode(getGoalId());
+		await user.keyboard("{Enter}");
+
+		await waitFor(() => {
+			const nodes = document.querySelectorAll(".react-flow__node");
+			expect(nodes).toHaveLength(1);
 		});
 	});
 

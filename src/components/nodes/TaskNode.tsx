@@ -7,17 +7,20 @@ export type TaskNodeType = Node<TaskNodeData, "task">;
 
 const DEFAULT_LABEL = "Do something great";
 
-function TaskNodeComponent({ data }: NodeProps<TaskNodeType>) {
+function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 	const setTaskLabel = useGraphStore((s) => s.setTaskLabel);
 	const addSubTask = useGraphStore((s) => s.addSubTask);
-	const [isEditing, setIsEditing] = useState(!data.label);
+	const startEditing = useGraphStore((s) => s.startEditing);
+	const editingNodeId = useGraphStore((s) => s.editingNodeId);
+	const stopEditing = useGraphStore((s) => s.stopEditing);
+	const isEditing = editingNodeId === data.taskId;
 	const [draft, setDraft] = useState(data.label || DEFAULT_LABEL);
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		if (!isEditing) return;
 
-		// Defer focus to next tick so it runs after ReactFlow's event handlers
+		setDraft(data.label || DEFAULT_LABEL);
 		const timer = setTimeout(() => {
 			inputRef.current?.focus();
 			inputRef.current?.select();
@@ -25,11 +28,11 @@ function TaskNodeComponent({ data }: NodeProps<TaskNodeType>) {
 		return () => {
 			clearTimeout(timer);
 		};
-	}, [isEditing]);
+	}, [isEditing, data.label]);
 
 	function confirmEdit() {
 		setTaskLabel(data.taskId, draft || DEFAULT_LABEL);
-		setIsEditing(false);
+		stopEditing();
 	}
 
 	function cancelEdit() {
@@ -38,30 +41,36 @@ function TaskNodeComponent({ data }: NodeProps<TaskNodeType>) {
 		if (!data.label) {
 			setTaskLabel(data.taskId, DEFAULT_LABEL);
 		}
-		setIsEditing(false);
-	}
-
-	function startEditing() {
-		setDraft(data.label);
-		setIsEditing(true);
+		stopEditing();
 	}
 
 	function handleKeyDown(e: React.KeyboardEvent) {
-		if (e.key === "Enter") confirmEdit();
-		if (e.key === "Escape") cancelEdit();
+		if (e.key === "Enter") {
+			e.stopPropagation();
+			confirmEdit();
+		}
+		if (e.key === "Escape") {
+			e.stopPropagation();
+			cancelEdit();
+		}
+		if (e.key === "Tab") {
+			e.preventDefault();
+			e.stopPropagation();
+			confirmEdit();
+			const newTaskId = addSubTask(data.taskId, "");
+			startEditing(newTaskId);
+		}
 	}
+
+	const focusRing = selected ? "ring-2 ring-blue-500 ring-offset-2" : "";
 
 	const taskClassName = data.isGoal
 		? "border-2 border-blue-600 bg-blue-50 px-6 py-3 text-lg font-semibold"
 		: "border border-gray-300 bg-white px-4 py-2 text-sm";
 
-	function handleAddSubTask() {
-		addSubTask(data.taskId, "");
-	}
-
 	return (
-		<div className={`rounded-lg shadow-sm ${taskClassName}`}>
-			<Handle type="target" position={Position.Top} />
+		<div className={`rounded-lg shadow-sm ${taskClassName} ${focusRing}`}>
+			{renderHandles(data.isGoal, data.direction)}
 			{isEditing ? (
 				<input
 					ref={inputRef}
@@ -75,30 +84,36 @@ function TaskNodeComponent({ data }: NodeProps<TaskNodeType>) {
 					onBlur={confirmEdit}
 				/>
 			) : (
-				<div className="flex items-center gap-2">
-					<span
-						role="button"
-						tabIndex={0}
-						onClick={() => {
-							startEditing();
-						}}
-						onKeyDown={(e) => {
-							if (e.key === "Enter") startEditing();
-						}}
-					>
-						{data.label || DEFAULT_LABEL}
-					</span>
-					<button
-						aria-label="Add sub-task"
-						className="nodrag ml-1 text-gray-400 hover:text-gray-700 text-sm leading-none"
-						onClick={handleAddSubTask}
-					>
-						+
-					</button>
-				</div>
+				<span>{data.label || DEFAULT_LABEL}</span>
 			)}
-			<Handle type="source" position={Position.Bottom} />
 		</div>
+	);
+}
+
+function renderHandles(isGoal: boolean, direction: "left" | "right") {
+	if (isGoal) {
+		return (
+			<>
+				<Handle type="source" position={Position.Right} id="right" />
+				<Handle type="source" position={Position.Left} id="left" />
+			</>
+		);
+	}
+
+	if (direction === "right") {
+		return (
+			<>
+				<Handle type="target" position={Position.Left} id="left" />
+				<Handle type="source" position={Position.Right} id="right" />
+			</>
+		);
+	}
+
+	return (
+		<>
+			<Handle type="target" position={Position.Right} id="right" />
+			<Handle type="source" position={Position.Left} id="left" />
+		</>
 	);
 }
 

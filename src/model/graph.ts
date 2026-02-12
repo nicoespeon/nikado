@@ -106,6 +106,24 @@ export function addDependency(
 	};
 }
 
+export function findParent(graph: MikadoGraph, taskId: TaskId) {
+	const dep = graph.dependencies.find((d) => d.to === taskId);
+	return dep ? dep.from : null;
+}
+
+export function findChildren(graph: MikadoGraph, taskId: TaskId) {
+	return graph.dependencies.filter((d) => d.from === taskId).map((d) => d.to);
+}
+
+export function findSiblings(graph: MikadoGraph, taskId: TaskId) {
+	const parentId = findParent(graph, taskId);
+	if (!parentId) return [];
+
+	return graph.dependencies
+		.filter((d) => d.from === parentId && d.to !== taskId)
+		.map((d) => d.to);
+}
+
 export function createTask(label: string): Task {
 	return {
 		id: crypto.randomUUID() as TaskId,

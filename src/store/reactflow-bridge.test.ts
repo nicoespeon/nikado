@@ -27,6 +27,7 @@ describe("toReactFlowNodes", () => {
 					label: "The goal",
 					status: "pending",
 					isGoal: true,
+					direction: "right",
 				},
 			},
 		]);
@@ -39,6 +40,7 @@ describe("toReactFlowNodes", () => {
 			...emptyGraph(),
 			goalId: goal.id,
 			tasks: [goal, subtask],
+			dependencies: [{ from: goal.id, to: subtask.id }],
 		};
 
 		const nodes = toReactFlowNodes(graph);
@@ -46,7 +48,7 @@ describe("toReactFlowNodes", () => {
 		expect(nodes[1].data).toMatchObject({ isGoal: false });
 	});
 
-	test("positions child nodes below their parent", () => {
+	test("positions child nodes to the right of the goal", () => {
 		const goal = createTask("Goal");
 		const child = createTask("Child");
 		const graph: MikadoGraph = {
@@ -59,30 +61,33 @@ describe("toReactFlowNodes", () => {
 		const [goalNode, childNode] = toReactFlowNodes(graph);
 
 		expect(goalNode.position).toEqual({ x: 0, y: 0 });
-		expect(childNode.position.y).toBeGreaterThan(goalNode.position.y);
+		expect(childNode.position.x).toBeGreaterThan(goalNode.position.x);
 	});
 
-	test("spaces sibling nodes horizontally", () => {
+	test("splits children into right and left groups", () => {
 		const goal = createTask("Goal");
-		const child1 = createTask("Child 1");
-		const child2 = createTask("Child 2");
+		const c1 = createTask("C1");
+		const c2 = createTask("C2");
 		const graph: MikadoGraph = {
 			...emptyGraph(),
 			goalId: goal.id,
-			tasks: [goal, child1, child2],
+			tasks: [goal, c1, c2],
 			dependencies: [
-				{ from: goal.id, to: child1.id },
-				{ from: goal.id, to: child2.id },
+				{ from: goal.id, to: c1.id },
+				{ from: goal.id, to: c2.id },
 			],
 		};
 
-		const [, c1, c2] = toReactFlowNodes(graph);
+		const nodes = toReactFlowNodes(graph);
+		const rightNodes = nodes.filter(
+			(n) => n.data.direction === "right" && !n.data.isGoal,
+		);
+		const leftNodes = nodes.filter((n) => n.data.direction === "left");
 
-		expect(c1.position.y).toBe(c2.position.y);
-		expect(c1.position.x).not.toBe(c2.position.x);
+		expect(rightNodes.length + leftNodes.length).toBe(2);
 	});
 
-	test("positions nested nodes at increasing depth", () => {
+	test("positions deeper nodes further from goal horizontally", () => {
 		const goal = createTask("Goal");
 		const child = createTask("Child");
 		const grandchild = createTask("Grandchild");
@@ -96,10 +101,37 @@ describe("toReactFlowNodes", () => {
 			],
 		};
 
-		const [goalNode, childNode, grandchildNode] = toReactFlowNodes(graph);
+		const [, childNode, grandchildNode] = toReactFlowNodes(graph);
 
-		expect(childNode.position.y).toBeGreaterThan(goalNode.position.y);
-		expect(grandchildNode.position.y).toBeGreaterThan(childNode.position.y);
+		expect(Math.abs(childNode.position.x)).toBeGreaterThan(0);
+		expect(Math.abs(grandchildNode.position.x)).toBeGreaterThan(
+			Math.abs(childNode.position.x),
+		);
+	});
+
+	test("sets direction for left-side subtree nodes", () => {
+		const goal = createTask("Goal");
+		const c1 = createTask("C1");
+		const c2 = createTask("C2");
+		const c3 = createTask("C3");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, c1, c2, c3],
+			dependencies: [
+				{ from: goal.id, to: c1.id },
+				{ from: goal.id, to: c2.id },
+				{ from: goal.id, to: c3.id },
+			],
+		};
+
+		const nodes = toReactFlowNodes(graph);
+		const leftNodes = nodes.filter((n) => n.data.direction === "left");
+
+		expect(leftNodes.length).toBeGreaterThan(0);
+		for (const node of leftNodes) {
+			expect(node.position.x).toBeLessThan(0);
+		}
 	});
 
 	test("returns empty array for empty graph", () => {
@@ -113,13 +145,14 @@ describe("toReactFlowEdges", () => {
 		const child = createTask("Child");
 		const graph: MikadoGraph = {
 			...emptyGraph(),
+			goalId: parent.id,
 			tasks: [parent, child],
 			dependencies: [{ from: parent.id, to: child.id }],
 		};
 
 		const edges = toReactFlowEdges(graph);
 
-		expect(edges).toEqual([
+		expect(edges).toMatchObject([
 			{
 				id: `${parent.id}-${child.id}`,
 				source: parent.id,
