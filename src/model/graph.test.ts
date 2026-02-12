@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
 	addDependency,
+	addSubTask,
 	canMarkDone,
 	createGoal,
 	createTask,
@@ -112,6 +113,60 @@ describe("createTask", () => {
 function emptyGraph(): MikadoGraph {
 	return { goalId: null, tasks: [], dependencies: [] };
 }
+
+describe("addSubTask", () => {
+	test("creates a new task as a dependency of the parent", () => {
+		const parent = createTask("Parent");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: parent.id,
+			tasks: [parent],
+		};
+
+		const result = addSubTask(graph, parent.id, "Child");
+
+		expect(result.tasks).toHaveLength(2);
+		expect(result.tasks[1]).toMatchObject({
+			label: "Child",
+			status: "pending",
+		});
+		expect(result.dependencies).toEqual([
+			{ from: parent.id, to: result.tasks[1].id },
+		]);
+	});
+
+	test("works at arbitrary depth", () => {
+		const goal = createTask("Goal");
+		const child = createTask("Child");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child],
+			dependencies: [{ from: goal.id, to: child.id }],
+		};
+
+		const result = addSubTask(graph, child.id, "Grandchild");
+
+		expect(result.tasks).toHaveLength(3);
+		expect(result.dependencies).toEqual([
+			{ from: goal.id, to: child.id },
+			{ from: child.id, to: result.tasks[2].id },
+		]);
+	});
+
+	test("does not mutate the original graph", () => {
+		const parent = createTask("Parent");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			tasks: [parent],
+		};
+
+		addSubTask(graph, parent.id, "Child");
+
+		expect(graph.tasks).toHaveLength(1);
+		expect(graph.dependencies).toEqual([]);
+	});
+});
 
 describe("addDependency", () => {
 	test("adds a dependency edge to the graph", () => {

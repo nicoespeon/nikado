@@ -1,4 +1,4 @@
-import { type Node, type NodeProps } from "@xyflow/react";
+import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { memo, useEffect, useRef, useState } from "react";
 import { useGraphStore } from "../../store/graph-store";
 import type { TaskNodeData } from "../../store/reactflow-bridge";
@@ -9,6 +9,7 @@ const DEFAULT_LABEL = "Do something great";
 
 function TaskNodeComponent({ data }: NodeProps<TaskNodeType>) {
 	const setTaskLabel = useGraphStore((s) => s.setTaskLabel);
+	const addSubTask = useGraphStore((s) => s.addSubTask);
 	const [isEditing, setIsEditing] = useState(!data.label);
 	const [draft, setDraft] = useState(data.label || DEFAULT_LABEL);
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -54,37 +55,49 @@ function TaskNodeComponent({ data }: NodeProps<TaskNodeType>) {
 		? "border-2 border-blue-600 bg-blue-50 px-6 py-3 text-lg font-semibold"
 		: "border border-gray-300 bg-white px-4 py-2 text-sm";
 
+	function handleAddSubTask() {
+		addSubTask(data.taskId, "");
+	}
+
 	return (
 		<div className={`rounded-lg shadow-sm ${taskClassName}`}>
+			<Handle type="target" position={Position.Top} />
 			{isEditing ? (
 				<input
 					ref={inputRef}
 					aria-label="Task label"
-					className="bg-transparent outline-none w-full"
+					className="nodrag bg-transparent outline-none w-full"
 					value={draft}
 					onChange={(e) => {
 						setDraft(e.target.value);
 					}}
 					onKeyDown={handleKeyDown}
 					onBlur={confirmEdit}
-					onMouseDown={(e) => {
-						e.stopPropagation();
-					}}
 				/>
 			) : (
-				<span
-					role="button"
-					tabIndex={0}
-					onClick={() => {
-						startEditing();
-					}}
-					onKeyDown={(e) => {
-						if (e.key === "Enter") startEditing();
-					}}
-				>
-					{data.label || DEFAULT_LABEL}
-				</span>
+				<div className="flex items-center gap-2">
+					<span
+						role="button"
+						tabIndex={0}
+						onClick={() => {
+							startEditing();
+						}}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") startEditing();
+						}}
+					>
+						{data.label || DEFAULT_LABEL}
+					</span>
+					<button
+						aria-label="Add sub-task"
+						className="nodrag ml-1 text-gray-400 hover:text-gray-700 text-sm leading-none"
+						onClick={handleAddSubTask}
+					>
+						+
+					</button>
+				</div>
 			)}
+			<Handle type="source" position={Position.Bottom} />
 		</div>
 	);
 }

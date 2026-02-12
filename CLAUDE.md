@@ -73,7 +73,7 @@ src/App.tsx      Top-level composition.
 
 Detailed specs live in [docs/features/](docs/features/). They are numbered by dependency order. Implement them in sequence. Update the number below after completing each feature.
 
-**Last completed feature: 02**
+**Last completed feature: 03**
 
 ### MVP
 

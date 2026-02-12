@@ -46,6 +46,62 @@ describe("toReactFlowNodes", () => {
 		expect(nodes[1].data).toMatchObject({ isGoal: false });
 	});
 
+	test("positions child nodes below their parent", () => {
+		const goal = createTask("Goal");
+		const child = createTask("Child");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child],
+			dependencies: [{ from: goal.id, to: child.id }],
+		};
+
+		const [goalNode, childNode] = toReactFlowNodes(graph);
+
+		expect(goalNode.position).toEqual({ x: 0, y: 0 });
+		expect(childNode.position.y).toBeGreaterThan(goalNode.position.y);
+	});
+
+	test("spaces sibling nodes horizontally", () => {
+		const goal = createTask("Goal");
+		const child1 = createTask("Child 1");
+		const child2 = createTask("Child 2");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child1, child2],
+			dependencies: [
+				{ from: goal.id, to: child1.id },
+				{ from: goal.id, to: child2.id },
+			],
+		};
+
+		const [, c1, c2] = toReactFlowNodes(graph);
+
+		expect(c1.position.y).toBe(c2.position.y);
+		expect(c1.position.x).not.toBe(c2.position.x);
+	});
+
+	test("positions nested nodes at increasing depth", () => {
+		const goal = createTask("Goal");
+		const child = createTask("Child");
+		const grandchild = createTask("Grandchild");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child, grandchild],
+			dependencies: [
+				{ from: goal.id, to: child.id },
+				{ from: child.id, to: grandchild.id },
+			],
+		};
+
+		const [goalNode, childNode, grandchildNode] = toReactFlowNodes(graph);
+
+		expect(childNode.position.y).toBeGreaterThan(goalNode.position.y);
+		expect(grandchildNode.position.y).toBeGreaterThan(childNode.position.y);
+	});
+
 	test("returns empty array for empty graph", () => {
 		expect(toReactFlowNodes(emptyGraph())).toEqual([]);
 	});

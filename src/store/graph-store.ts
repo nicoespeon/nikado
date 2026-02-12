@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import {
 	addDependency,
+	addSubTask as addSubTaskToGraph,
 	createGoal,
 	createTask,
 	removeTask,
@@ -14,13 +15,14 @@ import {
 type GraphStore = MikadoGraph & {
 	createGoal: (label: string) => void;
 	createTask: (label: string) => TaskId;
+	addSubTask: (parentId: TaskId, label: string) => void;
 	setTaskLabel: (taskId: TaskId, label: string) => void;
 	addDependency: (fromId: TaskId, toId: TaskId) => void;
 	removeTask: (taskId: TaskId) => void;
 	setTaskStatus: (taskId: TaskId, status: TaskStatus) => void;
 };
 
-export const useGraphStore = create<GraphStore>((set) => ({
+export const useGraphStore = create<GraphStore>((set, get) => ({
 	goalId: null,
 	tasks: [],
 	dependencies: [],
@@ -35,6 +37,10 @@ export const useGraphStore = create<GraphStore>((set) => ({
 			tasks: [...state.tasks, task],
 		}));
 		return task.id;
+	},
+
+	addSubTask(parentId, label) {
+		set(() => addSubTaskToGraph(get(), parentId, label));
 	},
 
 	setTaskLabel(taskId, label) {

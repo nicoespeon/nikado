@@ -32,6 +32,19 @@ export function createGoal(graph: MikadoGraph, label: string) {
 	};
 }
 
+export function addSubTask(
+	graph: MikadoGraph,
+	parentId: TaskId,
+	label: string,
+) {
+	const task = createTask(label);
+	return addDependency(
+		{ ...graph, tasks: [...graph.tasks, task] },
+		parentId,
+		task.id,
+	);
+}
+
 export function setTaskLabel(
 	graph: MikadoGraph,
 	taskId: TaskId,

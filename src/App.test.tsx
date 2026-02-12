@@ -139,6 +139,80 @@ describe("App", () => {
 		});
 	});
 
+	it("adds a sub-task when clicking the + button on a task", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("My Goal{Enter}");
+		await waitFor(() => {
+			expect(screen.getByText("My Goal")).toBeInTheDocument();
+		});
+
+		await user.click(screen.getByLabelText("Add sub-task"));
+
+		await waitFor(() => {
+			const nodes = document.querySelectorAll(".react-flow__node");
+			expect(nodes).toHaveLength(2);
+		});
+		expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+	});
+
+	it("creates a dependency edge when adding a sub-task", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => {
+			expect(screen.getByText("Goal")).toBeInTheDocument();
+		});
+
+		await user.click(screen.getByLabelText("Add sub-task"));
+
+		await waitFor(() => {
+			expect(useGraphStore.getState().dependencies).toHaveLength(1);
+		});
+	});
+
+	it("adds a sub-task to a sub-task (nested)", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => {
+			expect(screen.getByText("Goal")).toBeInTheDocument();
+		});
+
+		await user.click(screen.getByLabelText("Add sub-task"));
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Sub 1{Enter}");
+		await waitFor(() => {
+			expect(screen.getByText("Sub 1")).toBeInTheDocument();
+		});
+
+		const addButtons = screen.getAllByLabelText("Add sub-task");
+		await user.click(addButtons[1]);
+
+		await waitFor(() => {
+			const nodes = document.querySelectorAll(".react-flow__node");
+			expect(nodes).toHaveLength(3);
+			expect(useGraphStore.getState().dependencies).toHaveLength(2);
+		});
+	});
+
 	it("displays controls panel", () => {
 		render(<App />);
 
