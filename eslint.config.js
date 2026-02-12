@@ -27,6 +27,9 @@ export default tseslint.config(
 			},
 		},
 		settings: { vitest: { typecheck: true } },
+		rules: {
+			"@typescript-eslint/consistent-type-definitions": ["error", "type"],
+		},
 	},
 	{
 		extends: [vitest.configs.recommended],
