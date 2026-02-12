@@ -1,0 +1,110 @@
+type Brand<T, B extends string> = T & { readonly __brand: B };
+
+export type TaskId = Brand<string, "TaskId">;
+
+export type TaskStatus = "pending" | "current" | "done" | "parked";
+
+export type Task = {
+	id: TaskId;
+	label: string;
+	status: TaskStatus;
+};
+
+export type Dependency = {
+	from: TaskId;
+	to: TaskId;
+};
+
+export type MikadoGraph = {
+	goalId: TaskId | null;
+	tasks: Task[];
+	dependencies: Dependency[];
+};
+
+export function removeTask(graph: MikadoGraph, taskId: TaskId) {
+	const idsToRemove = collectDescendantsToRemove(graph, taskId);
+
+	return {
+		...graph,
+		tasks: graph.tasks.filter((t) => !idsToRemove.has(t.id)),
+		dependencies: graph.dependencies.filter(
+			(d) => !idsToRemove.has(d.from) && !idsToRemove.has(d.to),
+		),
+	};
+}
+
+export function findLeafTasks(graph: MikadoGraph) {
+	const tasksWithOutgoingEdges = new Set(graph.dependencies.map((d) => d.from));
+	return graph.tasks.filter((t) => !tasksWithOutgoingEdges.has(t.id));
+}
+
+export function canMarkDone(graph: MikadoGraph, taskId: TaskId) {
+	const dependencyIds = graph.dependencies
+		.filter((d) => d.from === taskId)
+		.map((d) => d.to);
+
+	return dependencyIds.every((id) => {
+		const task = graph.tasks.find((t) => t.id === id);
+		return task?.status === "done";
+	});
+}
+
+export function setTaskStatus(
+	graph: MikadoGraph,
+	taskId: TaskId,
+	status: TaskStatus,
+) {
+	return {
+		...graph,
+		tasks: graph.tasks.map((t) => (t.id === taskId ? { ...t, status } : t)),
+	};
+}
+
+export function addDependency(
+	graph: MikadoGraph,
+	fromId: TaskId,
+	toId: TaskId,
+) {
+	return {
+		...graph,
+		dependencies: [...graph.dependencies, { from: fromId, to: toId }],
+	};
+}
+
+export function createTask(label: string): Task {
+	return {
+		id: crypto.randomUUID() as TaskId,
+		label,
+		status: "pending",
+	};
+}
+
+// Collects taskId + all descendants that are ONLY reachable through taskId
+function collectDescendantsToRemove(graph: MikadoGraph, taskId: TaskId) {
+	const idsToRemove = new Set<TaskId>([taskId]);
+	const edgesWithoutRemoved = graph.dependencies.filter(
+		(d) => !idsToRemove.has(d.from) && !idsToRemove.has(d.to),
+	);
+
+	const queue = graph.dependencies
+		.filter((d) => d.from === taskId)
+		.map((d) => d.to);
+
+	for (const candidateId of queue) {
+		if (idsToRemove.has(candidateId)) continue;
+
+		const hasOtherParent = edgesWithoutRemoved.some(
+			(d) => d.to === candidateId && !idsToRemove.has(d.from),
+		);
+
+		if (hasOtherParent) continue;
+
+		idsToRemove.add(candidateId);
+
+		graph.dependencies
+			.filter((d) => d.from === candidateId)
+			.forEach((d) => queue.push(d.to));
+	}
+
+	return idsToRemove;
+}
