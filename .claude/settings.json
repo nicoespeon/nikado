@@ -3,7 +3,8 @@
 		"allow": [
 			"Bash(pnpm test:*)",
 			"Bash(pnpm lint:*)",
-			"WebFetch(domain:reactflow.dev)"
+			"WebFetch(domain:reactflow.dev)",
+			"Bash(ls:*)"
 		]
 	}
 }

@@ -50,7 +50,7 @@ src/App.tsx      Top-level composition.
 - Let TypeScript infer types and return types
 - Exported functions first, private helpers below
 - Extract logic into well-named functions instead of comments; comments only for "why"
-- Install dependencies with exact versions (`--exact`)
+- Install dependencies with exact versions (`--save-exact`)
 - Tabs for indentation (Prettier config)
 
 ## Testing Strategy
