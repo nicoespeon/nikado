@@ -15,15 +15,15 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 	const stopEditing = useGraphStore((s) => s.stopEditing);
 	const isEditing = editingNodeId === data.taskId;
 	const [draft, setDraft] = useState(data.label || DEFAULT_LABEL);
-	const inputRef = useRef<HTMLInputElement>(null);
+	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 	useEffect(() => {
 		if (!isEditing) return;
 
 		setDraft(data.label || DEFAULT_LABEL);
 		const timer = setTimeout(() => {
-			inputRef.current?.focus();
-			inputRef.current?.select();
+			textareaRef.current?.focus();
+			textareaRef.current?.select();
 		}, 0);
 		return () => {
 			clearTimeout(timer);
@@ -46,6 +46,7 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 
 	function handleKeyDown(e: React.KeyboardEvent) {
 		if (e.key === "Enter") {
+			e.preventDefault();
 			e.stopPropagation();
 			confirmEdit();
 		}
@@ -69,22 +70,32 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 		: "border border-gray-300 bg-white px-4 py-2 text-sm";
 
 	return (
-		<div className={`rounded-lg shadow-sm ${taskClassName} ${focusRing}`}>
+		<div
+			className={`rounded-lg shadow-sm w-fit min-w-[80px] max-w-[300px] ${taskClassName} ${focusRing}`}
+		>
 			{renderHandles(data.isGoal, data.direction)}
 			{isEditing ? (
-				<input
-					ref={inputRef}
-					aria-label="Task label"
-					className="nodrag bg-transparent outline-none w-full"
-					value={draft}
-					onChange={(e) => {
-						setDraft(e.target.value);
-					}}
-					onKeyDown={handleKeyDown}
-					onBlur={confirmEdit}
-				/>
+				<div className="relative">
+					<span
+						className="invisible whitespace-pre-wrap break-words"
+						aria-hidden="true"
+					>
+						{draft || " "}
+					</span>
+					<textarea
+						ref={textareaRef}
+						aria-label="Task label"
+						className="nodrag absolute inset-0 border-0 p-0 bg-transparent outline-none resize-none overflow-hidden whitespace-pre-wrap break-words"
+						value={draft}
+						onChange={(e) => {
+							setDraft(e.target.value);
+						}}
+						onKeyDown={handleKeyDown}
+						onBlur={confirmEdit}
+					/>
+				</div>
 			) : (
-				<span>{data.label || DEFAULT_LABEL}</span>
+				<span className="break-words">{data.label || DEFAULT_LABEL}</span>
 			)}
 		</div>
 	);
