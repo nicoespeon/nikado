@@ -20,6 +20,7 @@ function AutoFitView() {
 	const taskCount = useGraphStore((s) => s.tasks.length);
 
 	useEffect(() => {
+		if (taskCount <= 1) return;
 		void fitView({ duration: 200 });
 	}, [taskCount, fitView]);
 
