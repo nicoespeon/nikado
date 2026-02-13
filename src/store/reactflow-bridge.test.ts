@@ -27,6 +27,7 @@ describe("toReactFlowNodes", () => {
 					label: "The goal",
 					status: "pending",
 					isGoal: true,
+					isLeaf: true,
 					direction: "right",
 				},
 			},

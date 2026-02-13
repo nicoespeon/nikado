@@ -5,6 +5,7 @@ import {
 	createGoal,
 	createTask,
 	findParent,
+	markDone,
 	removeTask,
 	setTaskLabel,
 	setTaskStatus,
@@ -24,6 +25,7 @@ type GraphStore = MikadoGraph & {
 	addDependency: (fromId: TaskId, toId: TaskId) => void;
 	removeTask: (taskId: TaskId) => void;
 	setTaskStatus: (taskId: TaskId, status: TaskStatus) => void;
+	toggleDone: (taskId: TaskId) => void;
 	startEditing: (taskId: TaskId) => void;
 	stopEditing: () => void;
 	selectNode: (taskId: TaskId | null) => void;
@@ -75,7 +77,22 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 	},
 
 	setTaskStatus(taskId, status) {
-		set((state) => setTaskStatus(state, taskId, status));
+		if (status === "done") {
+			set((state) => markDone(state, taskId));
+		} else {
+			set((state) => setTaskStatus(state, taskId, status));
+		}
+	},
+
+	toggleDone(taskId) {
+		const task = get().tasks.find((t) => t.id === taskId);
+		if (!task) return;
+
+		if (task.status === "done") {
+			set((state) => setTaskStatus(state, taskId, "pending"));
+		} else {
+			set((state) => markDone(state, taskId));
+		}
 	},
 
 	startEditing(taskId) {

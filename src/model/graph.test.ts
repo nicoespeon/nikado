@@ -9,6 +9,7 @@ import {
 	findLeafTasks,
 	findParent,
 	findSiblings,
+	markDone,
 	removeTask,
 	setTaskLabel,
 	setTaskStatus,
@@ -511,5 +512,74 @@ describe("findSiblings", () => {
 		};
 
 		expect(findSiblings(graph, c2.id)).toEqual([c1.id, c3.id]);
+	});
+});
+
+describe("markDone", () => {
+	test("marks a leaf task done", () => {
+		const task = createTask("Leaf");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			tasks: [task],
+		};
+
+		const result = markDone(graph, task.id);
+
+		expect(result.tasks).toEqual([{ ...task, status: "done" }]);
+	});
+
+	test("cascades done to all descendants", () => {
+		const goal = createTask("Goal");
+		const child = createTask("Child");
+		const grandchild = createTask("Grandchild");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child, grandchild],
+			dependencies: [
+				{ from: goal.id, to: child.id },
+				{ from: child.id, to: grandchild.id },
+			],
+		};
+
+		const result = markDone(graph, goal.id);
+
+		expect(result.tasks).toEqual([
+			{ ...goal, status: "done" },
+			{ ...child, status: "done" },
+			{ ...grandchild, status: "done" },
+		]);
+	});
+
+	test("does not affect tasks outside the subtree", () => {
+		const a = createTask("A");
+		const b = createTask("B");
+		const c = createTask("C");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: a.id,
+			tasks: [a, b, c],
+			dependencies: [
+				{ from: a.id, to: b.id },
+				{ from: a.id, to: c.id },
+			],
+		};
+
+		const result = markDone(graph, b.id);
+
+		expect(result.tasks).toEqual([a, { ...b, status: "done" }, c]);
+	});
+
+	test("does not mutate the original graph", () => {
+		const task = createTask("Task");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			tasks: [task],
+		};
+
+		const result = markDone(graph, task.id);
+
+		expect(graph.tasks[0].status).toBe("pending");
+		expect(result).not.toBe(graph);
 	});
 });

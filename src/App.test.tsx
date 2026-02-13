@@ -31,6 +31,18 @@ function selectNode(taskId: TaskId) {
 	useGraphStore.getState().selectNode(taskId);
 }
 
+function getNodeByText(text: string) {
+	const node = screen.getByText(text).closest(".react-flow__node");
+	if (!node) throw new Error(`Node containing "${text}" not found`);
+	return node;
+}
+
+function getDoneButton(node: Element) {
+	const button = node.querySelector('button[aria-label="Done"]');
+	if (!button) throw new Error("Done button not found");
+	return button;
+}
+
 describe("App", () => {
 	afterEach(() => {
 		cleanup();
@@ -315,5 +327,138 @@ describe("App", () => {
 
 		const background = document.querySelector(".react-flow__background");
 		expect(background).toBeInTheDocument();
+	});
+
+	it("marks a leaf task done via status control", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+		selectNode(getGoalId());
+		await user.keyboard("{Tab}");
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Leaf{Enter}");
+		await waitFor(() => expect(screen.getByText("Leaf")).toBeInTheDocument());
+
+		await user.click(getDoneButton(getNodeByText("Leaf")));
+
+		await waitFor(() => {
+			expect(useGraphStore.getState().tasks[1].status).toBe("done");
+		});
+	});
+
+	it("cascades done to children when marking parent done", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+		selectNode(getGoalId());
+		await user.keyboard("{Tab}");
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Child{Enter}");
+		await waitFor(() => expect(screen.getByText("Child")).toBeInTheDocument());
+
+		await user.click(getDoneButton(getNodeByText("Goal")));
+
+		await waitFor(() => {
+			const { tasks } = useGraphStore.getState();
+			expect(tasks[0].status).toBe("done");
+			expect(tasks[1].status).toBe("done");
+		});
+	});
+
+	it("highlights pending leaf tasks as actionable", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+		selectNode(getGoalId());
+		await user.keyboard("{Tab}");
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Leaf{Enter}");
+		await waitFor(() => expect(screen.getByText("Leaf")).toBeInTheDocument());
+
+		const leafNode = getNodeByText("Leaf");
+		const leafWrapper = leafNode.querySelector("[data-leaf='true']");
+		expect(leafWrapper).toBeInTheDocument();
+		expect(leafWrapper).toHaveAttribute("data-status", "pending");
+	});
+
+	it("marks selected node done with 'd' keyboard shortcut", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+		selectNode(getGoalId());
+		await user.keyboard("d");
+
+		await waitFor(() => {
+			expect(useGraphStore.getState().tasks[0].status).toBe("done");
+		});
+	});
+
+	it("toggles done back to pending with 'd' without affecting children", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+		selectNode(getGoalId());
+		await user.keyboard("{Tab}");
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Child{Enter}");
+		await waitFor(() => expect(screen.getByText("Child")).toBeInTheDocument());
+
+		// Mark goal done (cascades to child)
+		selectNode(getGoalId());
+		await user.keyboard("d");
+		await waitFor(() => {
+			expect(useGraphStore.getState().tasks[0].status).toBe("done");
+			expect(useGraphStore.getState().tasks[1].status).toBe("done");
+		});
+
+		// Toggle goal back to pending (child stays done)
+		await user.keyboard("d");
+		await waitFor(() => {
+			expect(useGraphStore.getState().tasks[0].status).toBe("pending");
+			expect(useGraphStore.getState().tasks[1].status).toBe("done");
+		});
 	});
 });

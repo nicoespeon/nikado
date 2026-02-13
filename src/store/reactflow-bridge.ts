@@ -1,12 +1,13 @@
 import dagre from "@dagrejs/dagre";
 import type { Edge, Node } from "@xyflow/react";
-import type { MikadoGraph, TaskId } from "../model/graph";
+import { findLeafTasks, type MikadoGraph, type TaskId } from "../model/graph";
 
 export type TaskNodeData = {
 	taskId: TaskId;
 	label: string;
 	status: string;
 	isGoal: boolean;
+	isLeaf: boolean;
 	direction: "left" | "right";
 };
 
@@ -17,6 +18,7 @@ const NODE_HEIGHT = 40;
 
 export function toReactFlowNodes(graph: MikadoGraph): Node<TaskNodeData>[] {
 	const layout = computeMindMapLayout(graph);
+	const leafIds = new Set(findLeafTasks(graph).map((t) => t.id));
 
 	return graph.tasks.map((task) => {
 		const entry = layout.get(task.id);
@@ -29,6 +31,7 @@ export function toReactFlowNodes(graph: MikadoGraph): Node<TaskNodeData>[] {
 				label: task.label,
 				status: task.status,
 				isGoal: task.id === graph.goalId,
+				isLeaf: leafIds.has(task.id),
 				direction: entry?.direction ?? "right",
 			},
 		};

@@ -95,6 +95,16 @@ export function setTaskStatus(
 	};
 }
 
+export function markDone(graph: MikadoGraph, taskId: TaskId) {
+	const idsToMark = collectDescendants(graph, taskId);
+	return {
+		...graph,
+		tasks: graph.tasks.map((t) =>
+			idsToMark.has(t.id) ? { ...t, status: "done" as const } : t,
+		),
+	};
+}
+
 export function addDependency(
 	graph: MikadoGraph,
 	fromId: TaskId,
@@ -130,6 +140,19 @@ export function createTask(label: string): Task {
 		label,
 		status: "pending",
 	};
+}
+
+function collectDescendants(graph: MikadoGraph, taskId: TaskId) {
+	const ids = new Set<TaskId>([taskId]);
+	const queue = findChildren(graph, taskId);
+
+	for (const childId of queue) {
+		if (ids.has(childId)) continue;
+		ids.add(childId);
+		queue.push(...findChildren(graph, childId));
+	}
+
+	return ids;
 }
 
 // Collects taskId + all descendants that are ONLY reachable through taskId

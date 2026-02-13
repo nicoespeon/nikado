@@ -89,6 +89,12 @@ function App() {
 				return;
 			}
 
+			if (e.key === "d" && selectedNodeId) {
+				e.preventDefault();
+				state.toggleDone(selectedNodeId);
+				return;
+			}
+
 			if (e.key === "ArrowUp" && selectedNodeId) {
 				e.preventDefault();
 				const parentId = findParent(state, selectedNodeId);
