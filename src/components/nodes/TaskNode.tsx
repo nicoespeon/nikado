@@ -1,11 +1,12 @@
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { memo, useEffect, useRef, useState } from "react";
+import { MAX_LABEL_LENGTH, createTaskLabel } from "../../model/graph";
 import { useGraphStore } from "../../store/graph-store";
 import type { TaskNodeData } from "../../store/reactflow-bridge";
 
 export type TaskNodeType = Node<TaskNodeData, "task">;
 
-const DEFAULT_LABEL = "Do something great";
+const DEFAULT_LABEL = createTaskLabel("Do something great");
 
 function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 	const setTaskLabel = useGraphStore((s) => s.setTaskLabel);
@@ -16,7 +17,7 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 	const stopEditing = useGraphStore((s) => s.stopEditing);
 	const isEditing = editingNodeId === data.taskId;
 	const isDone = data.status === "done";
-	const [draft, setDraft] = useState(data.label || DEFAULT_LABEL);
+	const [draft, setDraft] = useState<string>(data.label || DEFAULT_LABEL);
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 	useEffect(() => {
@@ -87,6 +88,7 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 					<textarea
 						ref={textareaRef}
 						aria-label="Task label"
+						maxLength={MAX_LABEL_LENGTH}
 						className="nodrag absolute inset-0 border-0 p-0 bg-transparent outline-none resize-none overflow-hidden whitespace-pre-wrap break-words"
 						value={draft}
 						onChange={(e) => {

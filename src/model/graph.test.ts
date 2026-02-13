@@ -1,10 +1,12 @@
 import { describe, expect, test } from "vitest";
 import {
+	MAX_LABEL_LENGTH,
 	addDependency,
 	addSubTask,
 	canMarkDone,
 	createGoal,
 	createTask,
+	createTaskLabel,
 	findChildren,
 	findLeafTasks,
 	findParent,
@@ -556,6 +558,46 @@ describe("findSiblings", () => {
 		};
 
 		expect(findSiblings(graph, c2.id)).toEqual([c1.id, c3.id]);
+	});
+});
+
+describe("createTaskLabel", () => {
+	test("keeps a label within the max length unchanged", () => {
+		const label = "a".repeat(MAX_LABEL_LENGTH);
+
+		expect(createTaskLabel(label)).toBe(label);
+	});
+
+	test("truncates a label exceeding the max length", () => {
+		const label = "a".repeat(MAX_LABEL_LENGTH + 20);
+
+		expect(createTaskLabel(label)).toBe("a".repeat(MAX_LABEL_LENGTH));
+	});
+
+	test("returns an empty string as-is", () => {
+		expect(createTaskLabel("")).toBe("");
+	});
+});
+
+describe("createTask label truncation", () => {
+	test("truncates a label that exceeds the max length", () => {
+		const longLabel = "x".repeat(MAX_LABEL_LENGTH + 50);
+
+		const task = createTask(longLabel);
+
+		expect(task.label).toBe("x".repeat(MAX_LABEL_LENGTH));
+	});
+});
+
+describe("setTaskLabel truncation", () => {
+	test("truncates a label that exceeds the max length", () => {
+		const task = createTask("Short");
+		const graph: MikadoGraph = { ...emptyGraph(), tasks: [task] };
+		const longLabel = "y".repeat(MAX_LABEL_LENGTH + 30);
+
+		const result = setTaskLabel(graph, task.id, longLabel);
+
+		expect(result.tasks[0].label).toBe("y".repeat(MAX_LABEL_LENGTH));
 	});
 });
 

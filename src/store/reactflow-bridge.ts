@@ -1,10 +1,15 @@
 import dagre from "@dagrejs/dagre";
 import type { Edge, Node } from "@xyflow/react";
-import { findLeafTasks, type MikadoGraph, type TaskId } from "../model/graph";
+import {
+	findLeafTasks,
+	type MikadoGraph,
+	type TaskId,
+	type TaskLabel,
+} from "../model/graph";
 
 export type TaskNodeData = {
 	taskId: TaskId;
-	label: string;
+	label: TaskLabel;
 	status: string;
 	isGoal: boolean;
 	isLeaf: boolean;

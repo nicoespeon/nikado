@@ -2,11 +2,19 @@ type Brand<T, B extends string> = T & { readonly __brand: B };
 
 export type TaskId = Brand<string, "TaskId">;
 
+export type TaskLabel = Brand<string, "TaskLabel">;
+
+export const MAX_LABEL_LENGTH = 100;
+
+export function createTaskLabel(raw: string): TaskLabel {
+	return raw.slice(0, MAX_LABEL_LENGTH) as TaskLabel;
+}
+
 export type TaskStatus = "pending" | "current" | "done" | "parked";
 
 export type Task = {
 	id: TaskId;
-	label: string;
+	label: TaskLabel;
 	status: TaskStatus;
 };
 
@@ -50,9 +58,12 @@ export function setTaskLabel(
 	taskId: TaskId,
 	label: string,
 ) {
+	const taskLabel = createTaskLabel(label);
 	return {
 		...graph,
-		tasks: graph.tasks.map((t) => (t.id === taskId ? { ...t, label } : t)),
+		tasks: graph.tasks.map((t) =>
+			t.id === taskId ? { ...t, label: taskLabel } : t,
+		),
 	};
 }
 
@@ -152,7 +163,7 @@ export function findSiblings(graph: MikadoGraph, taskId: TaskId) {
 export function createTask(label: string): Task {
 	return {
 		id: crypto.randomUUID() as TaskId,
-		label,
+		label: createTaskLabel(label),
 		status: "pending",
 	};
 }
