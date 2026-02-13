@@ -1,6 +1,7 @@
 import {
 	Background,
 	Controls,
+	Panel,
 	ReactFlow,
 	useReactFlow,
 	type Node,
@@ -10,6 +11,8 @@ import {
 import "@xyflow/react/dist/style.css";
 import { useCallback, useEffect, useState } from "react";
 import { TaskNode } from "./components/nodes/TaskNode";
+import { ThemeToggle } from "./components/ThemeToggle";
+import { cycleTheme, useTheme } from "./hooks/use-theme";
 import { findChildren, findParent, type TaskId } from "./model/graph";
 import { useGraphStore } from "./store/graph-store";
 import {
@@ -33,6 +36,7 @@ function AutoFitView() {
 }
 
 function App() {
+	const { resolvedTheme, theme } = useTheme();
 	const graph = useGraphStore();
 	const [nodeSizes, setNodeSizes] = useState<NodeSizes>(new Map());
 	const rawNodes = toReactFlowNodes(graph, nodeSizes);
@@ -123,6 +127,12 @@ function App() {
 				return;
 			}
 
+			if (e.key === "t") {
+				e.preventDefault();
+				cycleTheme();
+				return;
+			}
+
 			if (e.key === "ArrowUp" && selectedNodeId) {
 				e.preventDefault();
 				const parentId = findParent(state, selectedNodeId);
@@ -177,12 +187,12 @@ function App() {
 
 	return (
 		<div
-			className="relative w-full h-full bg-gray-50"
+			className="relative w-full h-full bg-gray-50 dark:bg-gray-900"
 			onClick={createGoalOnDoubleClick}
 		>
 			{isEmpty && (
 				<div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-					<p className="text-gray-400 text-lg">
+					<p className="text-gray-400 dark:text-gray-500 text-lg">
 						Double-click or press Space to create your goal
 					</p>
 				</div>
@@ -195,16 +205,23 @@ function App() {
 				onNodeClick={onNodeClick}
 				onPaneClick={onPaneClick}
 				edgesFocusable={false}
+				colorMode={resolvedTheme}
 				// Figma-like tool controls
 				// Also, panOnDrag should be false for tests to work until https://github.com/testing-library/user-event/pull/1306 is released
 				selectionOnDrag={true}
 				panOnScroll={true}
 				panOnDrag={false}
 				fitView={true}
-				className="bg-white"
+				className="bg-white dark:bg-gray-900"
 			>
-				<Background color="#e5e7eb" gap={16} />
+				<Background
+					color={resolvedTheme === "dark" ? "#374151" : "#e5e7eb"}
+					gap={16}
+				/>
 				<Controls />
+				<Panel position="top-right">
+					<ThemeToggle theme={theme} />
+				</Panel>
 				<AutoFitView />
 			</ReactFlow>
 		</div>

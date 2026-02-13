@@ -65,7 +65,9 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 		}
 	}
 
-	const focusRing = selected ? "ring-2 ring-blue-500 ring-offset-2" : "";
+	const focusRing = selected
+		? "ring-2 ring-blue-500 dark:ring-blue-400 ring-offset-2 dark:ring-offset-gray-900"
+		: "";
 
 	return (
 		<div
@@ -106,8 +108,8 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 						}}
 						className={`nodrag w-4 h-4 shrink-0 rounded border ${
 							isDone
-								? "bg-green-500 border-green-600 text-white"
-								: "border-gray-400 hover:border-gray-600"
+								? "bg-green-500 border-green-600 dark:bg-green-600 dark:border-green-500 text-white"
+								: "border-gray-400 hover:border-gray-600 dark:border-gray-500 dark:hover:border-gray-400"
 						} flex items-center justify-center text-xs`}
 					>
 						{isDone ? "\u2713" : ""}
@@ -125,17 +127,17 @@ function statusStyles(status: string, isGoal: boolean, isLeaf: boolean) {
 
 	if (isGoal) {
 		return status === "done"
-			? `${goalSize} border-green-600 bg-green-50 opacity-70`
-			: `${goalSize} border-blue-600 bg-blue-50`;
+			? `${goalSize} border-green-600 bg-green-50 dark:border-green-500 dark:bg-green-950 opacity-70`
+			: `${goalSize} border-blue-600 bg-blue-50 dark:border-blue-500 dark:bg-blue-950`;
 	}
 
 	if (status === "done") {
-		return `${regularSize} border-green-500 bg-green-50 opacity-60`;
+		return `${regularSize} border-green-500 bg-green-50 dark:border-green-600 dark:bg-green-950 opacity-60`;
 	}
 
 	return isLeaf
-		? `${regularSize} border-amber-400 bg-amber-50`
-		: `${regularSize} border-gray-300 bg-white`;
+		? `${regularSize} border-amber-400 bg-amber-50 dark:border-amber-500 dark:bg-amber-950`
+		: `${regularSize} border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800`;
 }
 
 function renderHandles(isGoal: boolean, direction: "left" | "right") {
