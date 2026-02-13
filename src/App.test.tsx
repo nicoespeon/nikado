@@ -47,6 +47,7 @@ describe("App", () => {
 	afterEach(() => {
 		cleanup();
 		resetStore();
+		document.title = "Nikado";
 	});
 
 	it("shows instruction when canvas is empty", () => {
@@ -380,6 +381,43 @@ describe("App", () => {
 			const { tasks } = useGraphStore.getState();
 			expect(tasks[0].status).toBe("done");
 			expect(tasks[1].status).toBe("done");
+		});
+	});
+
+	it("shows 'Nikado' as tab title when no goal exists", () => {
+		render(<App />);
+
+		expect(document.title).toBe("Nikado");
+	});
+
+	it("shows goal label in tab title", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Migrate to React 19{Enter}");
+
+		await waitFor(() => {
+			expect(document.title).toBe("Migrate to React 19 | Nikado");
+		});
+	});
+
+	it("trims long goal labels in tab title", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		const longLabel = "A".repeat(60);
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard(`${longLabel}{Enter}`);
+
+		await waitFor(() => {
+			expect(document.title).toBe(`${"A".repeat(50)}\u2026 | Nikado`);
 		});
 	});
 

@@ -35,7 +35,30 @@ function AutoFitView() {
 	return null;
 }
 
+const MAX_TITLE_LENGTH = 50;
+
+function useDocumentTitle() {
+	const goalLabel = useGraphStore((s) => {
+		if (!s.goalId) return null;
+		return s.tasks.find((t) => t.id === s.goalId)?.label ?? null;
+	});
+
+	useEffect(() => {
+		if (!goalLabel) {
+			document.title = "Nikado";
+			return;
+		}
+
+		const trimmed =
+			goalLabel.length > MAX_TITLE_LENGTH
+				? goalLabel.slice(0, MAX_TITLE_LENGTH) + "\u2026"
+				: goalLabel;
+		document.title = `${trimmed} | Nikado`;
+	}, [goalLabel]);
+}
+
 function App() {
+	useDocumentTitle();
 	const { resolvedTheme, theme } = useTheme();
 	const graph = useGraphStore();
 	const [nodeSizes, setNodeSizes] = useState<NodeSizes>(new Map());
