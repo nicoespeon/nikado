@@ -97,6 +97,9 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 						onKeyDown={handleKeyDown}
 						onBlur={confirmEdit}
 					/>
+					<span className="absolute -bottom-5 -right-4 text-[8px] text-gray-400 dark:text-gray-500 pointer-events-none">
+						{draft.length}/{MAX_LABEL_LENGTH}
+					</span>
 				</div>
 			) : (
 				<div className="flex items-center gap-2">
