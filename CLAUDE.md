@@ -89,13 +89,15 @@ Detailed specs live in [docs/features/](docs/features/). They are numbered by de
 
 Features planned but not yet specced. Rough priority order:
 
-8. Undo/redo
-9. Parking slot (park tasks blocked by external factors)
-10. Timebox timer (set/start/stop, default 15 min, time tracking per task/day)
-11. Local storage persistence
-12. Export (format TBD: image, JSON, markdown, etc.)
-13. Real-time collaboration (y.js + WebRTC, no server)
-14. User-facing docs (how to use the tool)
+8. Control menu (custom toolbar replacing ReactFlow's default Controls)
+9. Undo/redo
+10. Export to image
+11. Help menu (keyboard shortcuts, Mikado method basics)
+12. Parking slot (park tasks blocked by external factors)
+13. Timebox timer (set/start/stop, default 15 min, time tracking per task/day)
+14. Local storage persistence
+15. Real-time collaboration (y.js + WebRTC, no server)
+16. User-facing docs (detailed guides beyond the help menu)
 
 ## Writing Style
 
