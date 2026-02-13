@@ -150,6 +150,12 @@ function App() {
 				return;
 			}
 
+			if ((e.key === "Delete" || e.key === "Backspace") && selectedNodeId) {
+				e.preventDefault();
+				state.removeTask(selectedNodeId);
+				return;
+			}
+
 			if (e.key === "t") {
 				e.preventDefault();
 				cycleTheme();

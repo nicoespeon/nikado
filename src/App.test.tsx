@@ -499,4 +499,124 @@ describe("App", () => {
 			expect(useGraphStore.getState().tasks[1].status).toBe("done");
 		});
 	});
+
+	it("deletes a leaf task with Delete key", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+		selectNode(getGoalId());
+		await user.keyboard("{Tab}");
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Leaf{Enter}");
+		await waitFor(() => expect(screen.getByText("Leaf")).toBeInTheDocument());
+
+		selectNode(useGraphStore.getState().tasks[1].id);
+		await user.keyboard("{Delete}");
+
+		await waitFor(() => {
+			expect(useGraphStore.getState().tasks).toHaveLength(1);
+			expect(screen.queryByText("Leaf")).not.toBeInTheDocument();
+			expect(screen.getByText("Goal")).toBeInTheDocument();
+		});
+	});
+
+	it("deletes a task with sub-tasks, cascade-deleting the sub-tree", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+		// Create: Goal > Middle > Leaf
+		selectNode(getGoalId());
+		await user.keyboard("{Tab}");
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Middle{Enter}");
+		await waitFor(() => expect(screen.getByText("Middle")).toBeInTheDocument());
+
+		selectNode(useGraphStore.getState().tasks[1].id);
+		await user.keyboard("{Tab}");
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Leaf{Enter}");
+		await waitFor(() => expect(screen.getByText("Leaf")).toBeInTheDocument());
+
+		// Delete Middle: should also remove Leaf
+		selectNode(useGraphStore.getState().tasks[1].id);
+		await user.keyboard("{Delete}");
+
+		await waitFor(() => {
+			expect(useGraphStore.getState().tasks).toHaveLength(1);
+			expect(screen.queryByText("Middle")).not.toBeInTheDocument();
+			expect(screen.queryByText("Leaf")).not.toBeInTheDocument();
+			expect(screen.getByText("Goal")).toBeInTheDocument();
+		});
+	});
+
+	it("deletes the goal, clearing the entire graph", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+		selectNode(getGoalId());
+		await user.keyboard("{Tab}");
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Child{Enter}");
+		await waitFor(() => expect(screen.getByText("Child")).toBeInTheDocument());
+
+		selectNode(getGoalId());
+		await user.keyboard("{Delete}");
+
+		await waitFor(() => {
+			expect(useGraphStore.getState().goalId).toBeNull();
+			expect(useGraphStore.getState().tasks).toHaveLength(0);
+			expect(
+				screen.getByText(/double-click or press space to create your goal/i),
+			).toBeInTheDocument();
+		});
+	});
+
+	it("deletes a task with Backspace", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+		selectNode(getGoalId());
+		await user.keyboard("{Backspace}");
+
+		await waitFor(() => {
+			expect(useGraphStore.getState().goalId).toBeNull();
+			expect(useGraphStore.getState().tasks).toHaveLength(0);
+		});
+	});
 });

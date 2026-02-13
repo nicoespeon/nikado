@@ -73,7 +73,12 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 	},
 
 	removeTask(taskId) {
-		set((state) => removeTask(state, taskId));
+		set((state) => ({
+			...removeTask(state, taskId),
+			goalId: state.goalId === taskId ? null : state.goalId,
+			selectedNodeId: null,
+			editingNodeId: null,
+		}));
 	},
 
 	setTaskStatus(taskId, status) {
