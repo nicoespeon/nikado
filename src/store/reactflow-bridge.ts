@@ -14,8 +14,6 @@ type LayoutDirection = "left" | "right";
 
 const NODE_WIDTH = 150;
 const NODE_HEIGHT = 40;
-const GOAL_WIDTH = 200;
-const GOAL_HEIGHT = 50;
 
 export function toReactFlowNodes(graph: MikadoGraph): Node<TaskNodeData>[] {
 	const layout = computeMindMapLayout(graph);
@@ -100,7 +98,7 @@ function layoutSubtree(
 	});
 	g.setDefaultEdgeLabel(() => ({}));
 
-	g.setNode(goalId, { width: GOAL_WIDTH, height: GOAL_HEIGHT });
+	g.setNode(goalId, { width: NODE_WIDTH, height: NODE_HEIGHT });
 
 	const visited = new Set<TaskId>([goalId]);
 	const queue = [...rootChildren];
