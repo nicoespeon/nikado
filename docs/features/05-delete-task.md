@@ -13,7 +13,7 @@ Features 01, 02, 03
 ### Delete interaction
 
 - Keyboard: `Delete` or `Backspace` on a selected/focused task
-- Optional: delete button on the node or in a context menu
+- No delete button for now. Plan for a button in Feature 08 (control menu).
 
 ### Cascade delete
 
@@ -31,9 +31,9 @@ Uses the `removeTask` function from Feature 01.
 - Task with sub-tasks: brief confirmation (e.g., "Delete task and 3 sub-tasks?")
 - Goal (root) node: clears the entire graph, confirm with stronger messaging
 
-### Edge deletion
+### No edge deletion
 
-Users can also delete individual edges without deleting nodes. This disconnects a sub-task from its parent but keeps the sub-task as a free-floating node.
+Edges cannot be selected or deleted independently. All nodes must be connected to the goal. No orphan nodes.
 
 ## Acceptance Criteria
 
@@ -42,10 +42,8 @@ Users can also delete individual edges without deleting nodes. This disconnects 
 - All edges involving deleted tasks are removed
 - Confirmation prompt for tasks with sub-tasks
 - Deleting the goal clears the graph (with confirmation)
-- Users can delete individual edges without deleting nodes
 - Integration test: create goal with sub-tasks, delete a middle task, verify sub-tree is gone
 - Integration test: delete the goal, verify graph is empty
-- Integration test: delete an edge, verify nodes remain but are disconnected
 
 ## Notes
 
