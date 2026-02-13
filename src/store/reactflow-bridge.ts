@@ -11,13 +11,18 @@ export type TaskNodeData = {
 	direction: "left" | "right";
 };
 
+export type NodeSizes = Map<string, { width: number; height: number }>;
+
 type LayoutDirection = "left" | "right";
 
-const NODE_WIDTH = 150;
-const NODE_HEIGHT = 40;
+const DEFAULT_NODE_WIDTH = 150;
+const DEFAULT_NODE_HEIGHT = 40;
 
-export function toReactFlowNodes(graph: MikadoGraph): Node<TaskNodeData>[] {
-	const layout = computeMindMapLayout(graph);
+export function toReactFlowNodes(
+	graph: MikadoGraph,
+	nodeSizes: NodeSizes = new Map(),
+): Node<TaskNodeData>[] {
+	const layout = computeMindMapLayout(graph, nodeSizes);
 	const leafIds = new Set(findLeafTasks(graph).map((t) => t.id));
 
 	return graph.tasks.map((task) => {
@@ -38,8 +43,11 @@ export function toReactFlowNodes(graph: MikadoGraph): Node<TaskNodeData>[] {
 	});
 }
 
-export function toReactFlowEdges(graph: MikadoGraph): Edge[] {
-	const layout = computeMindMapLayout(graph);
+export function toReactFlowEdges(
+	graph: MikadoGraph,
+	nodeSizes: NodeSizes = new Map(),
+): Edge[] {
+	const layout = computeMindMapLayout(graph, nodeSizes);
 
 	return graph.dependencies.map((dep) => {
 		const sourceDir = layout.get(dep.from)?.direction ?? "right";
@@ -61,7 +69,15 @@ type LayoutEntry = {
 	direction: LayoutDirection;
 };
 
-function computeMindMapLayout(graph: MikadoGraph) {
+function nodeSize(id: string, nodeSizes: NodeSizes) {
+	const measured = nodeSizes.get(id);
+	return {
+		width: measured?.width ?? DEFAULT_NODE_WIDTH,
+		height: measured?.height ?? DEFAULT_NODE_HEIGHT,
+	};
+}
+
+function computeMindMapLayout(graph: MikadoGraph, nodeSizes: NodeSizes) {
 	const result = new Map<TaskId, LayoutEntry>();
 	if (!graph.goalId) return result;
 
@@ -78,8 +94,8 @@ function computeMindMapLayout(graph: MikadoGraph) {
 		direction: "right",
 	});
 
-	layoutSubtree(graph, graph.goalId, rightChildren, "right", result);
-	layoutSubtree(graph, graph.goalId, leftChildren, "left", result);
+	layoutSubtree(graph, graph.goalId, rightChildren, "right", result, nodeSizes);
+	layoutSubtree(graph, graph.goalId, leftChildren, "left", result, nodeSizes);
 
 	return result;
 }
@@ -90,6 +106,7 @@ function layoutSubtree(
 	rootChildren: TaskId[],
 	direction: LayoutDirection,
 	result: Map<TaskId, LayoutEntry>,
+	nodeSizes: NodeSizes,
 ) {
 	if (rootChildren.length === 0) return;
 
@@ -101,7 +118,7 @@ function layoutSubtree(
 	});
 	g.setDefaultEdgeLabel(() => ({}));
 
-	g.setNode(goalId, { width: NODE_WIDTH, height: NODE_HEIGHT });
+	g.setNode(goalId, nodeSize(goalId, nodeSizes));
 
 	const visited = new Set<TaskId>([goalId]);
 	const queue = [...rootChildren];
@@ -110,7 +127,7 @@ function layoutSubtree(
 		if (visited.has(childId)) continue;
 		visited.add(childId);
 
-		g.setNode(childId, { width: NODE_WIDTH, height: NODE_HEIGHT });
+		g.setNode(childId, nodeSize(childId, nodeSizes));
 
 		const grandchildren = graph.dependencies
 			.filter((d) => d.from === childId)
@@ -134,15 +151,23 @@ function layoutSubtree(
 
 	dagre.layout(g);
 
+	// Dagre returns CENTER positions; ReactFlow expects TOP-LEFT.
+	// Convert each to top-left before computing relative offsets.
 	const goalPos = g.node(goalId) as { x: number; y: number };
+	const goalSize = nodeSize(goalId, nodeSizes);
+	const goalTopLeft = {
+		x: goalPos.x - goalSize.width / 2,
+		y: goalPos.y - goalSize.height / 2,
+	};
 
 	for (const nodeId of visited) {
 		if (nodeId === goalId) continue;
 		const nodePos = g.node(nodeId) as { x: number; y: number };
+		const size = nodeSize(nodeId, nodeSizes);
 		result.set(nodeId, {
 			position: {
-				x: nodePos.x - goalPos.x,
-				y: nodePos.y - goalPos.y,
+				x: nodePos.x - size.width / 2 - goalTopLeft.x,
+				y: nodePos.y - size.height / 2 - goalTopLeft.y,
 			},
 			direction,
 		});

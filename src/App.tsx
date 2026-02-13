@@ -4,14 +4,19 @@ import {
 	ReactFlow,
 	useReactFlow,
 	type Node,
+	type NodeChange,
 	type NodeTypes,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { TaskNode } from "./components/nodes/TaskNode";
 import { findChildren, findParent, type TaskId } from "./model/graph";
 import { useGraphStore } from "./store/graph-store";
-import { toReactFlowEdges, toReactFlowNodes } from "./store/reactflow-bridge";
+import {
+	toReactFlowEdges,
+	toReactFlowNodes,
+	type NodeSizes,
+} from "./store/reactflow-bridge";
 
 const nodeTypes: NodeTypes = { task: TaskNode };
 
@@ -29,8 +34,9 @@ function AutoFitView() {
 
 function App() {
 	const graph = useGraphStore();
-	const rawNodes = toReactFlowNodes(graph);
-	const edges = toReactFlowEdges(graph);
+	const [nodeSizes, setNodeSizes] = useState<NodeSizes>(new Map());
+	const rawNodes = toReactFlowNodes(graph, nodeSizes);
+	const edges = toReactFlowEdges(graph, nodeSizes);
 	const isEmpty = graph.goalId === null;
 	const selectedNodeId = graph.selectedNodeId;
 
@@ -45,6 +51,27 @@ function App() {
 
 	const onPaneClick = useCallback(() => {
 		useGraphStore.getState().selectNode(null);
+	}, []);
+
+	const onNodesChange = useCallback((changes: NodeChange[]) => {
+		// Skip layout recomputation during editing to avoid focus loss
+		if (useGraphStore.getState().editingNodeId) return;
+
+		setNodeSizes((prev) => {
+			let next = prev;
+			for (const change of changes) {
+				if (change.type !== "dimensions" || !change.dimensions) continue;
+				const existing = next.get(change.id);
+				if (
+					existing?.width === change.dimensions.width &&
+					existing.height === change.dimensions.height
+				)
+					continue;
+				if (next === prev) next = new Map(prev);
+				next.set(change.id, change.dimensions);
+			}
+			return next;
+		});
 	}, []);
 
 	useEffect(() => {
@@ -164,6 +191,7 @@ function App() {
 				nodes={nodes}
 				edges={edges}
 				nodeTypes={nodeTypes}
+				onNodesChange={onNodesChange}
 				onNodeClick={onNodeClick}
 				onPaneClick={onPaneClick}
 				edgesFocusable={false}
