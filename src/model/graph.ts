@@ -69,8 +69,23 @@ export function removeTask(graph: MikadoGraph, taskId: TaskId) {
 }
 
 export function findLeafTasks(graph: MikadoGraph) {
-	const tasksWithOutgoingEdges = new Set(graph.dependencies.map((d) => d.from));
-	return graph.tasks.filter((t) => !tasksWithOutgoingEdges.has(t.id));
+	const childrenByTask = new Map<TaskId, TaskId[]>();
+	for (const d of graph.dependencies) {
+		const children = childrenByTask.get(d.from) ?? [];
+		children.push(d.to);
+		childrenByTask.set(d.from, children);
+	}
+
+	const taskById = new Map(graph.tasks.map((t) => [t.id, t]));
+
+	return graph.tasks.filter((t) => {
+		if (t.status === "done") return false;
+
+		const children = childrenByTask.get(t.id);
+		if (!children) return true;
+
+		return children.every((id) => taskById.get(id)?.status === "done");
+	});
 }
 
 export function canMarkDone(graph: MikadoGraph, taskId: TaskId) {

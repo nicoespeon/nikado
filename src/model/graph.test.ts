@@ -410,6 +410,50 @@ describe("findLeafTasks", () => {
 
 		expect(findLeafTasks(graph)).toEqual([]);
 	});
+
+	test("excludes done tasks", () => {
+		const parent = createTask("Parent");
+		const doneLeaf = { ...createTask("Done Leaf"), status: "done" as const };
+		const pendingLeaf = createTask("Pending Leaf");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			tasks: [parent, doneLeaf, pendingLeaf],
+			dependencies: [
+				{ from: parent.id, to: doneLeaf.id },
+				{ from: parent.id, to: pendingLeaf.id },
+			],
+		};
+
+		expect(findLeafTasks(graph)).toEqual([pendingLeaf]);
+	});
+
+	test("treats a task with all done children as a leaf", () => {
+		const parent = createTask("Parent");
+		const doneChild = { ...createTask("Done Child"), status: "done" as const };
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			tasks: [parent, doneChild],
+			dependencies: [{ from: parent.id, to: doneChild.id }],
+		};
+
+		expect(findLeafTasks(graph)).toEqual([parent]);
+	});
+
+	test("does not treat a task with some pending children as a leaf", () => {
+		const parent = createTask("Parent");
+		const doneChild = { ...createTask("Done"), status: "done" as const };
+		const pendingChild = createTask("Pending");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			tasks: [parent, doneChild, pendingChild],
+			dependencies: [
+				{ from: parent.id, to: doneChild.id },
+				{ from: parent.id, to: pendingChild.id },
+			],
+		};
+
+		expect(findLeafTasks(graph)).toEqual([pendingChild]);
+	});
 });
 
 describe("findParent", () => {
