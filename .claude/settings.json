@@ -4,7 +4,8 @@
 			"Bash(pnpm test:*)",
 			"Bash(pnpm lint:*)",
 			"WebFetch(domain:reactflow.dev)",
-			"Bash(ls:*)"
+			"Bash(ls:*)",
+			"Bash(pnpm update:*)"
 		]
 	}
 }
