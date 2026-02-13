@@ -11,8 +11,6 @@ const DEFAULT_LABEL = createTaskLabel("Do something great");
 function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 	const setTaskLabel = useGraphStore((s) => s.setTaskLabel);
 	const toggleDone = useGraphStore((s) => s.toggleDone);
-	const addSubTask = useGraphStore((s) => s.addSubTask);
-	const startEditing = useGraphStore((s) => s.startEditing);
 	const editingNodeId = useGraphStore((s) => s.editingNodeId);
 	const stopEditing = useGraphStore((s) => s.stopEditing);
 	const isEditing = editingNodeId === data.taskId;
@@ -61,8 +59,6 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 			e.preventDefault();
 			e.stopPropagation();
 			confirmEdit();
-			const newTaskId = addSubTask(data.taskId, "");
-			startEditing(newTaskId);
 		}
 	}
 
