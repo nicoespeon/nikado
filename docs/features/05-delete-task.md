@@ -25,11 +25,9 @@ When deleting a task:
 
 Uses the `removeTask` function from Feature 01.
 
-### Confirmation
+### No confirmation
 
-- Leaf task (no sub-tasks): no confirmation needed
-- Task with sub-tasks: brief confirmation (e.g., "Delete task and 3 sub-tasks?")
-- Goal (root) node: clears the entire graph, confirm with stronger messaging
+Deletion is immediate. No confirmation dialog. Undo (Feature 09) will handle mistakes.
 
 ### No edge deletion
 
@@ -40,8 +38,7 @@ Edges cannot be selected or deleted independently. All nodes must be connected t
 - User can delete any task via `Delete`/`Backspace`
 - Deleting a task with sub-tasks cascade-deletes the entire sub-tree
 - All edges involving deleted tasks are removed
-- Confirmation prompt for tasks with sub-tasks
-- Deleting the goal clears the graph (with confirmation)
+- Deleting the goal clears the graph
 - Integration test: create goal with sub-tasks, delete a middle task, verify sub-tree is gone
 - Integration test: delete the goal, verify graph is empty
 
