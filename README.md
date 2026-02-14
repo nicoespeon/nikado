@@ -22,6 +22,10 @@ Stuck on a big change with no end in sight? The Mikado Method helps you break un
 
 No backend. All state lives in the URL.
 
+![Screenshot of a graph in Nikado](public/example-graph.png)
+
+> 💁 [Click here to open this graph](https://nikado.app/#N4Ig5g9ghgNgkgExALhFAHAZgKYDYBmU+AtAMYDsALAIzGUCsATJcelLtsQtevQAwBOeh3zU+IADQgALlADOAazkoA2qACWSVBhwEiZKrQbNW7Tt16Dh2UeKkwoAI2wwUIAKIA7UlAAOcgFcHaWwAAgAxdRhsABEAIVDpCFDnUKdoxOS5AHd1aVIAC1CEKFlHeWxJEDlZaQDlVF9sTwR1TzAQAF8JDS0QdFxcSnJMKFo+Sj5GOkYoAVZsclxiPj4oUnRKBHR8Kfoqh2dXVAAlbF8HUjDI6PjQ3OkimNKnCtC2kIAnQivQ-AhPqEYNAEAAKACUAHoagDsBCqjVSvU3E0Wm0Ot1em4SggBIx8KR6MRyAJcJg6HM+MRHARaAJSHjGJhqAhHIw+LgDk4XG4zgBbCAANzCAEFfL5QnJsNIAMpJT5QMDYG5w8GhJWy+WK5VRVWhPnSgoQBDKKSIuoNECo1rtLo9ECaNzUGgTJmcKCYUjLShjKDEAQDBDEXCMHjUWb0BkbLlHNwABSCMFCAQlpE+2FK6ggnlCEHwEV1dySQKgAW8BWwnwRtWRjWaNox9sdqFIjHI60cAipwwQ3ZJ5GIcy2xGZ+Gw9CE1GwmHo1BjPNQAFUpcUXuUVx9Kz8wm1Qou4NWkZaENnKpiHX11tQaTPptRcK26Gsqeg+OQia-MBz8ENMAHSPOxwgAAwumpRhCUZRvJu3zrGE-yAiq8QAHTAlAYJQjC6bwmaNbHqedpYqg6COM+npBowCA0HQ+CUYO9CUMsmCOCSrYCOwuD0Eg9jckBwHZvg6hgAE6Z-LqfwAgWtwJLupDZjUnwBKQ8qHha2IEZ0AC6UgIOc9bNKQ6jYA0aggPgnwQHybg6HghAkBQ1HGCwbAcFwPD8EIIhiFUSRuAMQwjGMKyTNMlCzPM6CLMsqzrJs2y7Iw+znuZlnWVgtn6A5RhMM5ZhuZYnk2N5Ui+agOJ4gSRIkmSFJdtStL+gyjBMiybIcoRZkWVZZXoRVhLEqS5I+nVNKiI1jLMqy7KciVEBOi6YU4IOnrer6-qBsGoboOGUCRvS6AdSl3X9IMwyjOMIUzHMCxLCsawbFsOx7D5c0tm2HZ1T2fYCAOQ5BqO46TtOs6HV1bitu2pCdn2vZ0P2g4CMOAMTrOwNzrN1mkNeZJMMQ96PpMUAvm+H58F+BC-v+oOpW9kPQ3DsPDD9CNI9QY4o1OM7ozIr39KRRPkcQlGObRQa7YxI4sfSjDsYMXFdJpnRAA)
+
 ## Getting started
 
 Prerequisites: [Node.js](https://nodejs.org/) (>=20.19.0) and [pnpm](https://pnpm.io/) (10.x). If you use [asdf](https://asdf-vm.com/), the `.tool-versions` file has you covered.
