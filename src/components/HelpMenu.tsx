@@ -52,12 +52,33 @@ const SHORTCUT_CATEGORIES: readonly ShortcutCategory[] = [
 	},
 ];
 
+const FOCUSABLE_SELECTOR = 'a[href], button, [tabindex]:not([tabindex="-1"])';
+
 function HelpMenu({ onClose }: HelpMenuProps) {
 	const closeRef = useRef<HTMLButtonElement>(null);
+	const dialogRef = useRef<HTMLDialogElement>(null);
 
 	useEffect(() => {
 		closeRef.current?.focus();
 	}, []);
+
+	function trapFocus(e: React.KeyboardEvent) {
+		if (e.key !== "Tab") return;
+
+		const focusable = dialogRef.current?.querySelectorAll(FOCUSABLE_SELECTOR);
+		if (!focusable || focusable.length === 0) return;
+
+		const first = focusable[0] as HTMLElement;
+		const last = focusable[focusable.length - 1] as HTMLElement;
+
+		if (e.shiftKey && document.activeElement === first) {
+			e.preventDefault();
+			last.focus();
+		} else if (!e.shiftKey && document.activeElement === last) {
+			e.preventDefault();
+			first.focus();
+		}
+	}
 
 	return (
 		<div
@@ -67,8 +88,10 @@ function HelpMenu({ onClose }: HelpMenuProps) {
 			}}
 		>
 			<dialog
+				ref={dialogRef}
 				open
 				aria-label="How to use Nikado"
+				onKeyDown={trapFocus}
 				className="relative w-full max-w-lg max-h-[80vh] rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-xl p-0 overflow-hidden"
 			>
 				<div className="flex items-center justify-between px-5 pt-4 pb-2">
