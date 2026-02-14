@@ -29,7 +29,7 @@ export function useUrlSync() {
 				if (graphData.goalId === null && graphData.tasks.length === 0) {
 					if (lastSerialized) {
 						lastSerialized = "";
-						window.history.pushState(null, "", window.location.pathname);
+						window.history.replaceState(null, "", window.location.pathname);
 					}
 					return;
 				}
@@ -38,34 +38,13 @@ export function useUrlSync() {
 				if (serialized === lastSerialized) return;
 
 				lastSerialized = serialized;
-				window.history.pushState(null, "", `#${serialized}`);
+				window.history.replaceState(null, "", `#${serialized}`);
 			}, DEBOUNCE_MS);
 		});
-
-		function handlePopState() {
-			const newHash = window.location.hash.slice(1);
-			lastSerialized = newHash;
-
-			if (newHash) {
-				const graph = deserializeGraph(newHash);
-				if (graph) {
-					useGraphStore.setState({
-						...graph,
-						editingNodeId: null,
-						selectedNodeId: null,
-					});
-				}
-			} else {
-				useGraphStore.getState().reset();
-			}
-		}
-
-		window.addEventListener("popstate", handlePopState);
 
 		return () => {
 			clearTimeout(timeoutId);
 			unsubscribe();
-			window.removeEventListener("popstate", handlePopState);
 		};
 	}, []);
 }

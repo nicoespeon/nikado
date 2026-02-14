@@ -17,6 +17,10 @@ function resetStore() {
 		dependencies: [],
 		editingNodeId: null,
 		selectedNodeId: null,
+		past: [],
+		future: [],
+		canUndo: false,
+		canRedo: false,
 	});
 }
 

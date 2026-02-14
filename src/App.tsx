@@ -14,6 +14,7 @@ import { TaskNode } from "./components/nodes/TaskNode";
 import { ResetButton } from "./components/ResetButton";
 import { ShareButton } from "./components/ShareButton";
 import { ThemeToggle } from "./components/ThemeToggle";
+import { UndoButton, RedoButton } from "./components/UndoRedoButtons";
 import { copyUrl } from "./hooks/use-share";
 import { cycleTheme, useTheme } from "./hooks/use-theme";
 import { useUrlSync } from "./hooks/use-url-sync";
@@ -117,6 +118,18 @@ function App() {
 
 			const state = useGraphStore.getState();
 
+			if (e.key === "z" && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
+				e.preventDefault();
+				state.undo();
+				return;
+			}
+
+			if (e.key === "z" && (e.metaKey || e.ctrlKey) && e.shiftKey) {
+				e.preventDefault();
+				state.redo();
+				return;
+			}
+
 			if (e.key === " ") {
 				e.preventDefault();
 				if (state.goalId === null) {
@@ -124,7 +137,7 @@ function App() {
 					const goalId = useGraphStore.getState().goalId;
 					if (goalId) state.startEditing(goalId);
 				} else {
-					state.startEditing(state.goalId);
+					state.editTask(state.goalId);
 				}
 				return;
 			}
@@ -145,7 +158,7 @@ function App() {
 
 			if ((e.key === "e" || e.key === "F2") && selectedNodeId) {
 				e.preventDefault();
-				state.startEditing(selectedNodeId);
+				state.editTask(selectedNodeId);
 				return;
 			}
 
@@ -267,6 +280,8 @@ function App() {
 				<Controls />
 				<Panel position="top-right">
 					<div className="flex gap-1">
+						<UndoButton />
+						<RedoButton />
 						<ResetButton />
 						<ShareButton />
 						<ThemeToggle theme={theme} />
