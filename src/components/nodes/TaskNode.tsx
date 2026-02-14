@@ -1,6 +1,10 @@
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { memo, useEffect, useRef, useState } from "react";
-import { MAX_LABEL_LENGTH, createTaskLabel } from "../../model/graph";
+import {
+	MAX_LABEL_LENGTH,
+	createTaskLabel,
+	findParent,
+} from "../../model/graph";
 import { useGraphStore } from "../../store/graph-store";
 import type { TaskNodeData } from "../../store/reactflow-bridge";
 
@@ -13,6 +17,7 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 	const toggleDone = useGraphStore((s) => s.toggleDone);
 	const editingNodeId = useGraphStore((s) => s.editingNodeId);
 	const stopEditing = useGraphStore((s) => s.stopEditing);
+	const undo = useGraphStore((s) => s.undo);
 	const isEditing = editingNodeId === data.taskId;
 	const isDone = data.status === "done";
 	const [draft, setDraft] = useState<string>(data.label || DEFAULT_LABEL);
@@ -37,11 +42,13 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 	}
 
 	function cancelEdit() {
-		const fallback = data.label || DEFAULT_LABEL;
-		setDraft(fallback);
 		if (!data.label) {
-			setTaskLabel(data.taskId, DEFAULT_LABEL);
+			const parentId = findParent(useGraphStore.getState(), data.taskId);
+			undo();
+			if (parentId) useGraphStore.getState().selectNode(parentId);
+			return;
 		}
+		setDraft(data.label);
 		stopEditing();
 	}
 

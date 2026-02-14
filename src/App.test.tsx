@@ -154,7 +154,7 @@ describe("App", () => {
 		});
 	});
 
-	it("keeps default label on Escape", async () => {
+	it("deletes a new goal on Escape when label is still the placeholder", async () => {
 		const user = userEvent.setup();
 		render(<App />);
 
@@ -166,7 +166,64 @@ describe("App", () => {
 		await user.keyboard("{Escape}");
 
 		await waitFor(() => {
-			expect(screen.getByText("Do something great")).toBeInTheDocument();
+			expect(document.querySelectorAll(".react-flow__node")).toHaveLength(0);
+		});
+		expect(useGraphStore.getState().goalId).toBeNull();
+		expect(useGraphStore.getState().selectedNodeId).toBeNull();
+	});
+
+	it("deletes a new sub-task on Escape and selects the parent node", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("My Goal{Enter}");
+		await waitFor(() => {
+			expect(screen.getByText("My Goal")).toBeInTheDocument();
+		});
+
+		selectNode(getGoalId());
+		await user.keyboard("{Tab}");
+		await waitFor(() => {
+			const labels = screen.getAllByLabelText("Task label");
+			expect(labels).toHaveLength(1);
+		});
+
+		await user.keyboard("{Escape}");
+
+		await waitFor(() => {
+			expect(document.querySelectorAll(".react-flow__node")).toHaveLength(1);
+		});
+		expect(useGraphStore.getState().tasks).toHaveLength(1);
+		expect(useGraphStore.getState().selectedNodeId).toBe(getGoalId());
+	});
+
+	it("keeps existing label on Escape when editing a saved task", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("My Goal{Enter}");
+		await waitFor(() => {
+			expect(screen.getByText("My Goal")).toBeInTheDocument();
+		});
+
+		selectNode(getGoalId());
+		await user.keyboard("e");
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+
+		await user.keyboard("{Escape}");
+
+		await waitFor(() => {
+			expect(screen.getByText("My Goal")).toBeInTheDocument();
 		});
 	});
 
