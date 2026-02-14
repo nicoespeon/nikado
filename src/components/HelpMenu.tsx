@@ -161,6 +161,64 @@ function HelpMenu({ onClose }: HelpMenuProps) {
 							</table>
 						</div>
 					))}
+
+					<div className="mt-6 text-xs text-gray-400 dark:text-gray-500">
+						<p className="mb-2">
+							Built with{" "}
+							<a
+								href="https://reactflow.dev"
+								target="_blank"
+								rel="noopener noreferrer"
+								className="text-blue-500 hover:underline"
+							>
+								React Flow
+							</a>
+							. Made with 💜 in Canada 🇨🇦
+						</p>
+						<p
+							className="italic text-sm text-gray-500 dark:text-gray-400"
+							style={{ fontFamily: "'Patrick Hand', cursive" }}
+						>
+							− Nicolas Carlo
+						</p>
+						<div className="flex items-center gap-2 mt-1">
+							<a
+								href="https://understandlegacycode.com"
+								target="_blank"
+								rel="noopener noreferrer"
+								className="text-blue-500 hover:underline"
+							>
+								Blog
+							</a>
+							<span>·</span>
+							<a
+								href="https://bsky.app/profile/nicoespeon.com"
+								target="_blank"
+								rel="noopener noreferrer"
+								className="text-blue-500 hover:underline"
+							>
+								Bluesky
+							</a>
+							<span>·</span>
+							<a
+								href="https://www.linkedin.com/in/nicolas-carlo-095b243b/"
+								target="_blank"
+								rel="noopener noreferrer"
+								className="text-blue-500 hover:underline"
+							>
+								LinkedIn
+							</a>
+							<span>·</span>
+							<a
+								href="https://github.com/nicoespeon"
+								target="_blank"
+								rel="noopener noreferrer"
+								className="text-blue-500 hover:underline"
+							>
+								GitHub
+							</a>
+						</div>
+					</div>
 				</div>
 			</dialog>
 		</div>

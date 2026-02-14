@@ -381,6 +381,7 @@ function App() {
 				panOnScroll={true}
 				panOnDrag={false}
 				fitView={true}
+				proOptions={{ hideAttribution: true }}
 				className="bg-white dark:bg-gray-900"
 			>
 				<Background
