@@ -105,6 +105,7 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 				<div className="flex items-center gap-2">
 					<button
 						type="button"
+						tabIndex={-1}
 						aria-label="Done"
 						aria-pressed={isDone}
 						onClick={(e) => {
