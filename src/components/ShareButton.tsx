@@ -1,19 +1,7 @@
-import { useState } from "react";
-
-const FEEDBACK_MS = 2000;
+import { copyUrl, useCopied } from "../hooks/use-share";
 
 export function ShareButton() {
-	const [copied, setCopied] = useState(false);
-
-	function handleClick() {
-		void navigator.clipboard.writeText(window.location.href).then(() => {
-			setCopied(true);
-			setTimeout(() => {
-				setCopied(false);
-			}, FEEDBACK_MS);
-		});
-	}
-
+	const copied = useCopied();
 	const label = copied ? "Link copied!" : "Share";
 
 	return (
@@ -22,7 +10,7 @@ export function ShareButton() {
 				type="button"
 				aria-label={label}
 				title={label}
-				onClick={handleClick}
+				onClick={copyUrl}
 				className="flex items-center justify-center w-7 h-7 rounded bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-sm cursor-pointer"
 			>
 				{copied ? (

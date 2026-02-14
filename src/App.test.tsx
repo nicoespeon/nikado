@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 import type { TaskId, TaskLabel } from "./model/graph";
+import { resetShare } from "./hooks/use-share";
 import { serializeGraph } from "./model/url";
 import { useGraphStore } from "./store/graph-store";
 
@@ -48,6 +49,7 @@ describe("App", () => {
 	afterEach(() => {
 		cleanup();
 		resetStore();
+		resetShare();
 		document.title = "Nikado";
 		window.history.replaceState(null, "", window.location.pathname);
 	});
@@ -704,7 +706,9 @@ describe("App", () => {
 
 			await user.click(screen.getByRole("button", { name: "Share" }));
 
-			expect(screen.getByText("Link copied!")).toBeInTheDocument();
+			await waitFor(() => {
+				expect(screen.getByText("Link copied!")).toBeInTheDocument();
+			});
 
 			await waitFor(
 				() => {

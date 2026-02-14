@@ -13,6 +13,7 @@ import { useCallback, useEffect, useState } from "react";
 import { TaskNode } from "./components/nodes/TaskNode";
 import { ShareButton } from "./components/ShareButton";
 import { ThemeToggle } from "./components/ThemeToggle";
+import { copyUrl } from "./hooks/use-share";
 import { cycleTheme, useTheme } from "./hooks/use-theme";
 import { useUrlSync } from "./hooks/use-url-sync";
 import { findChildren, findParent, type TaskId } from "./model/graph";
@@ -162,6 +163,12 @@ function App() {
 			if (e.key === "t") {
 				e.preventDefault();
 				cycleTheme();
+				return;
+			}
+
+			if (e.key === "s") {
+				e.preventDefault();
+				copyUrl();
 				return;
 			}
 
