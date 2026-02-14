@@ -384,8 +384,9 @@ describe("App", () => {
 	it("displays controls panel", () => {
 		render(<App />);
 
-		const controls = document.querySelector(".react-flow__controls");
-		expect(controls).toBeInTheDocument();
+		expect(screen.getByTitle("Zoom in (+)")).toBeInTheDocument();
+		expect(screen.getByTitle("Zoom out (-)")).toBeInTheDocument();
+		expect(screen.getByTitle("Fit view (0)")).toBeInTheDocument();
 	});
 
 	it("displays background pattern", () => {

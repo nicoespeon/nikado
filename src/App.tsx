@@ -1,6 +1,5 @@
 import {
 	Background,
-	Controls,
 	Panel,
 	ReactFlow,
 	useReactFlow,
@@ -9,12 +8,17 @@ import {
 	type NodeTypes,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { TaskNode } from "./components/nodes/TaskNode";
 import { ResetButton } from "./components/ResetButton";
 import { ShareButton } from "./components/ShareButton";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { UndoButton, RedoButton } from "./components/UndoRedoButtons";
+import {
+	ZoomInButton,
+	ZoomOutButton,
+	FitViewButton,
+} from "./components/ZoomControls";
 import { copyUrl } from "./hooks/use-share";
 import { cycleTheme, useTheme } from "./hooks/use-theme";
 import { useUrlSync } from "./hooks/use-url-sync";
@@ -68,6 +72,11 @@ function App() {
 	const { resolvedTheme, theme } = useTheme();
 	const graph = useGraphStore();
 	const [nodeSizes, setNodeSizes] = useState<NodeSizes>(new Map());
+	const reactFlowRef = useRef<{
+		zoomIn: (options?: { duration?: number }) => Promise<boolean>;
+		zoomOut: (options?: { duration?: number }) => Promise<boolean>;
+		fitView: (options?: { duration?: number }) => Promise<boolean>;
+	} | null>(null);
 	const rawNodes = toReactFlowNodes(graph, nodeSizes);
 	const edges = toReactFlowEdges(graph);
 	const isEmpty = graph.goalId === null;
@@ -132,6 +141,24 @@ function App() {
 
 			// Don't intercept browser shortcuts (e.g. ⌘R to reload)
 			if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+			if ((e.key === "+" || e.key === "=") && reactFlowRef.current) {
+				e.preventDefault();
+				void reactFlowRef.current.zoomIn({ duration: 200 });
+				return;
+			}
+
+			if (e.key === "-" && reactFlowRef.current) {
+				e.preventDefault();
+				void reactFlowRef.current.zoomOut({ duration: 200 });
+				return;
+			}
+
+			if (e.key === "0" && reactFlowRef.current) {
+				e.preventDefault();
+				void reactFlowRef.current.fitView({ duration: 200 });
+				return;
+			}
 
 			if (e.key === " ") {
 				e.preventDefault();
@@ -272,6 +299,9 @@ function App() {
 				onNodesChange={onNodesChange}
 				onNodeClick={onNodeClick}
 				onPaneClick={onPaneClick}
+				onInit={(instance) => {
+					reactFlowRef.current = instance;
+				}}
 				edgesFocusable={false}
 				colorMode={resolvedTheme}
 				// Figma-like tool controls
@@ -286,9 +316,11 @@ function App() {
 					color={resolvedTheme === "dark" ? "#374151" : "#e5e7eb"}
 					gap={16}
 				/>
-				<Controls />
 				<Panel position="top-right">
 					<div className="flex gap-1">
+						<ZoomInButton />
+						<ZoomOutButton />
+						<FitViewButton />
 						<UndoButton />
 						<RedoButton />
 						<ResetButton />

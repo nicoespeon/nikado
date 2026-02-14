@@ -6,8 +6,8 @@ export function ResetButton() {
 	return (
 		<button
 			type="button"
-			aria-label="New graph (R)"
-			title="New graph (R)"
+			aria-label="Reset (R)"
+			title="Reset (R)"
 			disabled={isEmpty}
 			onClick={() => {
 				useGraphStore.getState().reset();
