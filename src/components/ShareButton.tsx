@@ -2,7 +2,7 @@ import { copyUrl, useCopied } from "../hooks/use-share";
 
 export function ShareButton() {
 	const copied = useCopied();
-	const label = copied ? "Link copied!" : "Share";
+	const label = copied ? "Link copied!" : "Share (S)";
 
 	return (
 		<div className="relative">

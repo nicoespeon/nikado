@@ -13,9 +13,9 @@ const THEME_ICON: Record<Theme, string> = {
 };
 
 const THEME_LABEL: Record<Theme, string> = {
-	system: "Theme: system",
-	light: "Theme: light",
-	dark: "Theme: dark",
+	system: "Theme: system (T)",
+	light: "Theme: light (T)",
+	dark: "Theme: dark (T)",
 };
 
 export function ThemeToggle({ theme }: ThemeToggleProps) {

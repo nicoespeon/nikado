@@ -33,7 +33,7 @@ describe("Theme toggle", () => {
 		render(<App />);
 
 		expect(
-			screen.getByRole("button", { name: "Theme: system" }),
+			screen.getByRole("button", { name: "Theme: system (T)" }),
 		).toBeInTheDocument();
 	});
 
@@ -45,17 +45,17 @@ describe("Theme toggle", () => {
 
 		await user.click(button);
 		expect(
-			screen.getByRole("button", { name: "Theme: light" }),
+			screen.getByRole("button", { name: "Theme: light (T)" }),
 		).toBeInTheDocument();
 
 		await user.click(button);
 		expect(
-			screen.getByRole("button", { name: "Theme: dark" }),
+			screen.getByRole("button", { name: "Theme: dark (T)" }),
 		).toBeInTheDocument();
 
 		await user.click(button);
 		expect(
-			screen.getByRole("button", { name: "Theme: system" }),
+			screen.getByRole("button", { name: "Theme: system (T)" }),
 		).toBeInTheDocument();
 	});
 
@@ -107,13 +107,13 @@ describe("Theme toggle", () => {
 		await user.keyboard("t");
 
 		expect(
-			screen.getByRole("button", { name: "Theme: light" }),
+			screen.getByRole("button", { name: "Theme: light (T)" }),
 		).toBeInTheDocument();
 
 		await user.keyboard("t");
 
 		expect(
-			screen.getByRole("button", { name: "Theme: dark" }),
+			screen.getByRole("button", { name: "Theme: dark (T)" }),
 		).toBeInTheDocument();
 	});
 
@@ -124,7 +124,7 @@ describe("Theme toggle", () => {
 		render(<App />);
 
 		expect(
-			screen.getByRole("button", { name: "Theme: dark" }),
+			screen.getByRole("button", { name: "Theme: dark (T)" }),
 		).toBeInTheDocument();
 		expect(document.documentElement.classList.contains("dark")).toBe(true);
 	});

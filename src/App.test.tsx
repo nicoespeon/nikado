@@ -691,7 +691,7 @@ describe("App", () => {
 			const user = userEvent.setup();
 			render(<App />);
 
-			await user.click(screen.getByRole("button", { name: "Share" }));
+			await user.click(screen.getByRole("button", { name: "Share (S)" }));
 
 			expect(writeText).toHaveBeenCalledWith(window.location.href);
 			writeText.mockRestore();
@@ -704,7 +704,7 @@ describe("App", () => {
 			const user = userEvent.setup();
 			render(<App />);
 
-			await user.click(screen.getByRole("button", { name: "Share" }));
+			await user.click(screen.getByRole("button", { name: "Share (S)" }));
 
 			await waitFor(() => {
 				expect(screen.getByText("Link copied!")).toBeInTheDocument();
