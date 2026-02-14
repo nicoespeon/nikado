@@ -140,6 +140,20 @@ function App() {
 				return;
 			}
 
+			if (e.key === "?") {
+				e.preventDefault();
+				setHelpOpen((prev) => !prev);
+				return;
+			}
+
+			if (e.key === "t") {
+				e.preventDefault();
+				cycleTheme();
+				return;
+			}
+
+			if (helpOpen) return;
+
 			const state = useGraphStore.getState();
 
 			if (e.key === "z" && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
@@ -219,12 +233,6 @@ function App() {
 				return;
 			}
 
-			if (e.key === "t") {
-				e.preventDefault();
-				cycleTheme();
-				return;
-			}
-
 			if (e.key === "r" && state.goalId !== null) {
 				e.preventDefault();
 				state.reset();
@@ -250,12 +258,6 @@ function App() {
 					fitView: reactFlowRef.current.fitView,
 					goalLabel: goal?.label,
 				});
-				return;
-			}
-
-			if (e.key === "?") {
-				e.preventDefault();
-				setHelpOpen((prev) => !prev);
 				return;
 			}
 
