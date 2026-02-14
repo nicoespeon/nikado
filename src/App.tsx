@@ -10,6 +10,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { TaskNode } from "./components/nodes/TaskNode";
+import { CopyMarkdownButton } from "./components/CopyMarkdownButton";
 import { ExportButton } from "./components/ExportButton";
 import { exportGraphAsImage } from "./components/export-image";
 import { ResetButton } from "./components/ResetButton";
@@ -21,6 +22,7 @@ import {
 	ZoomInButton,
 	ZoomOutButton,
 } from "./components/ZoomControls";
+import { copyMarkdown } from "./hooks/use-copy-markdown";
 import { copyUrl } from "./hooks/use-share";
 import { cycleTheme, useTheme } from "./hooks/use-theme";
 import { useUrlSync } from "./hooks/use-url-sync";
@@ -227,6 +229,12 @@ function App() {
 				return;
 			}
 
+			if (e.key === "c" && state.goalId !== null) {
+				e.preventDefault();
+				copyMarkdown(state);
+				return;
+			}
+
 			if (e.key === "x" && state.goalId !== null && reactFlowRef.current) {
 				e.preventDefault();
 				const goal = state.tasks.find((t) => t.id === state.goalId);
@@ -374,6 +382,7 @@ function App() {
 						<RedoButton />
 						<ResetButton />
 						<ExportButton />
+						<CopyMarkdownButton />
 						<ShareButton />
 						<ThemeToggle theme={theme} />
 					</div>

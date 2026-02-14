@@ -15,6 +15,7 @@ import {
 	removeTask,
 	setTaskLabel,
 	setTaskStatus,
+	toMarkdown,
 	type MikadoGraph,
 } from "./graph";
 
@@ -667,5 +668,93 @@ describe("markDone", () => {
 
 		expect(graph.tasks[0].status).toBe("pending");
 		expect(result).not.toBe(graph);
+	});
+});
+
+describe("toMarkdown", () => {
+	test("returns empty string for an empty graph", () => {
+		expect(toMarkdown(emptyGraph())).toBe("");
+	});
+
+	test("renders a single goal as an unchecked item", () => {
+		const goal = createTask("Refactor auth");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal],
+		};
+
+		expect(toMarkdown(graph)).toBe("- [ ] Refactor auth");
+	});
+
+	test("renders a done goal as a checked item", () => {
+		const goal = { ...createTask("Refactor auth"), status: "done" as const };
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal],
+		};
+
+		expect(toMarkdown(graph)).toBe("- [x] Refactor auth");
+	});
+
+	test("renders nested tasks with indentation", () => {
+		const goal = createTask("Goal");
+		const child = createTask("Child");
+		const grandchild = {
+			...createTask("Grandchild"),
+			status: "done" as const,
+		};
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child, grandchild],
+			dependencies: [
+				{ from: goal.id, to: child.id },
+				{ from: child.id, to: grandchild.id },
+			],
+		};
+
+		expect(toMarkdown(graph)).toBe(
+			["- [ ] Goal", "  - [ ] Child", "    - [x] Grandchild"].join("\n"),
+		);
+	});
+
+	test("renders sibling tasks at the same level", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const b = { ...createTask("B"), status: "done" as const };
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+			],
+		};
+
+		expect(toMarkdown(graph)).toBe(
+			["- [ ] Goal", "  - [ ] A", "  - [x] B"].join("\n"),
+		);
+	});
+
+	test("treats current and parked tasks as unchecked", () => {
+		const goal = {
+			...createTask("Goal"),
+			status: "current" as const,
+		};
+		const parked = {
+			...createTask("Parked"),
+			status: "parked" as const,
+		};
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, parked],
+			dependencies: [{ from: goal.id, to: parked.id }],
+		};
+
+		expect(toMarkdown(graph)).toBe(["- [ ] Goal", "  - [ ] Parked"].join("\n"));
 	});
 });

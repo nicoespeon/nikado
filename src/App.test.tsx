@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 import type { TaskId, TaskLabel } from "./model/graph";
+import { resetMarkdownCopy } from "./hooks/use-copy-markdown";
 import { resetShare } from "./hooks/use-share";
 import { serializeGraph } from "./model/url";
 import { useGraphStore } from "./store/graph-store";
@@ -53,6 +54,7 @@ describe("App", () => {
 	afterEach(() => {
 		cleanup();
 		resetStore();
+		resetMarkdownCopy();
 		resetShare();
 		document.title = "Nikado";
 		window.history.replaceState(null, "", window.location.pathname);
@@ -874,6 +876,69 @@ describe("App", () => {
 			expect(
 				screen.getByText(/double-click or press space to create your goal/i),
 			).toBeInTheDocument();
+		});
+	});
+
+	describe("Copy as text button", () => {
+		it("is disabled when the graph is empty", () => {
+			render(<App />);
+
+			expect(
+				screen.getByRole("button", { name: "Copy as text (C)" }),
+			).toBeDisabled();
+		});
+
+		it("copies markdown to clipboard", async () => {
+			const writeText = vi
+				.spyOn(navigator.clipboard, "writeText")
+				.mockResolvedValue(undefined);
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			await user.click(
+				screen.getByRole("button", { name: "Copy as text (C)" }),
+			);
+
+			expect(writeText).toHaveBeenCalledWith("- [ ] Goal");
+			writeText.mockRestore();
+		});
+
+		it("shows confirmation feedback after copying", async () => {
+			const writeText = vi
+				.spyOn(navigator.clipboard, "writeText")
+				.mockResolvedValue(undefined);
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			await user.click(
+				screen.getByRole("button", { name: "Copy as text (C)" }),
+			);
+
+			await waitFor(() => {
+				expect(screen.getByText("Copied as text!")).toBeInTheDocument();
+			});
+
+			await waitFor(
+				() => {
+					expect(screen.queryByText("Copied as text!")).not.toBeInTheDocument();
+				},
+				{ timeout: 3000 },
+			);
+			writeText.mockRestore();
 		});
 	});
 

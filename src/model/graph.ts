@@ -168,6 +168,26 @@ export function createTask(label: string): Task {
 	};
 }
 
+export function toMarkdown(graph: MikadoGraph) {
+	if (!graph.goalId) return "";
+
+	const taskById = new Map(graph.tasks.map((t) => [t.id, t]));
+
+	function walk(taskId: TaskId, depth: number): string {
+		const task = taskById.get(taskId);
+		if (!task) return "";
+
+		const indent = "  ".repeat(depth);
+		const checkbox = task.status === "done" ? "[x]" : "[ ]";
+		const line = `${indent}- ${checkbox} ${task.label}`;
+		const children = findChildren(graph, taskId);
+
+		return [line, ...children.map((id) => walk(id, depth + 1))].join("\n");
+	}
+
+	return walk(graph.goalId, 0);
+}
+
 function collectDescendants(graph: MikadoGraph, taskId: TaskId) {
 	const ids = new Set<TaskId>([taskId]);
 	const queue = findChildren(graph, taskId);
