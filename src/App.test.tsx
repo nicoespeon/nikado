@@ -1,8 +1,9 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
-import type { TaskId } from "./model/graph";
+import type { TaskId, TaskLabel } from "./model/graph";
+import { serializeGraph } from "./model/url";
 import { useGraphStore } from "./store/graph-store";
 
 function getCanvas() {
@@ -48,6 +49,7 @@ describe("App", () => {
 		cleanup();
 		resetStore();
 		document.title = "Nikado";
+		window.history.replaceState(null, "", window.location.pathname);
 	});
 
 	it("shows instruction when canvas is empty", () => {
@@ -617,6 +619,104 @@ describe("App", () => {
 		await waitFor(() => {
 			expect(useGraphStore.getState().goalId).toBeNull();
 			expect(useGraphStore.getState().tasks).toHaveLength(0);
+		});
+	});
+
+	describe("URL state persistence", () => {
+		it("updates URL hash after creating a goal", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("My Goal{Enter}");
+			await waitFor(() =>
+				expect(screen.getByText("My Goal")).toBeInTheDocument(),
+			);
+
+			await waitFor(() => {
+				expect(window.location.hash).not.toBe("");
+			});
+		});
+
+		it("restores graph from URL hash on mount", async () => {
+			const graph = {
+				goalId: "test-id" as TaskId,
+				tasks: [
+					{
+						id: "test-id" as TaskId,
+						label: "Restored Goal" as TaskLabel,
+						status: "pending" as const,
+					},
+				],
+				dependencies: [],
+			};
+			window.history.replaceState(null, "", `#${serializeGraph(graph)}`);
+
+			render(<App />);
+
+			await waitFor(() => {
+				expect(screen.getByText("Restored Goal")).toBeInTheDocument();
+			});
+		});
+
+		it("shows empty canvas for malformed URL hash", () => {
+			window.location.hash = "#garbage-data";
+
+			render(<App />);
+
+			expect(
+				screen.getByText(/double-click or press space to create your goal/i),
+			).toBeInTheDocument();
+		});
+
+		it("shows empty canvas for empty URL hash", () => {
+			render(<App />);
+
+			expect(
+				screen.getByText(/double-click or press space to create your goal/i),
+			).toBeInTheDocument();
+		});
+	});
+
+	describe("Share button", () => {
+		it("copies current URL to clipboard", async () => {
+			const writeText = vi
+				.spyOn(navigator.clipboard, "writeText")
+				.mockResolvedValue(undefined);
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.click(screen.getByRole("button", { name: "Share" }));
+
+			expect(writeText).toHaveBeenCalledWith(window.location.href);
+			writeText.mockRestore();
+		});
+
+		it("shows confirmation feedback after copying", async () => {
+			const writeText = vi
+				.spyOn(navigator.clipboard, "writeText")
+				.mockResolvedValue(undefined);
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.click(screen.getByRole("button", { name: "Share" }));
+
+			expect(
+				screen.getByRole("button", { name: "Link copied!" }),
+			).toBeInTheDocument();
+
+			await waitFor(
+				() => {
+					expect(
+						screen.getByRole("button", { name: "Share" }),
+					).toBeInTheDocument();
+				},
+				{ timeout: 3000 },
+			);
+			writeText.mockRestore();
 		});
 	});
 });

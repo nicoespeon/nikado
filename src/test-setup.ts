@@ -26,6 +26,14 @@ Object.defineProperty(window, "matchMedia", {
 	}),
 });
 
+// Mock clipboard API for share button
+Object.assign(navigator, {
+	clipboard: {
+		writeText: () => Promise.resolve(),
+		readText: () => Promise.resolve(""),
+	},
+});
+
 // Mock ResizeObserver for ReactFlow
 global.ResizeObserver = class ResizeObserver {
 	observe() {

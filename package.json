@@ -19,6 +19,7 @@
 	"dependencies": {
 		"@dagrejs/dagre": "2.0.4",
 		"@xyflow/react": "12.10.0",
+		"lz-string": "1.5.0",
 		"react": "19.2.0",
 		"react-dom": "19.2.0",
 		"zustand": "5.0.11"

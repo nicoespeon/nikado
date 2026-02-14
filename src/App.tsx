@@ -11,8 +11,10 @@ import {
 import "@xyflow/react/dist/style.css";
 import { useCallback, useEffect, useState } from "react";
 import { TaskNode } from "./components/nodes/TaskNode";
+import { ShareButton } from "./components/ShareButton";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { cycleTheme, useTheme } from "./hooks/use-theme";
+import { useUrlSync } from "./hooks/use-url-sync";
 import { findChildren, findParent, type TaskId } from "./model/graph";
 import { useGraphStore } from "./store/graph-store";
 import {
@@ -59,6 +61,7 @@ function useDocumentTitle() {
 
 function App() {
 	useDocumentTitle();
+	useUrlSync();
 	const { resolvedTheme, theme } = useTheme();
 	const graph = useGraphStore();
 	const [nodeSizes, setNodeSizes] = useState<NodeSizes>(new Map());
@@ -249,7 +252,10 @@ function App() {
 				/>
 				<Controls />
 				<Panel position="top-right">
-					<ThemeToggle theme={theme} />
+					<div className="flex gap-1">
+						<ShareButton />
+						<ThemeToggle theme={theme} />
+					</div>
 				</Panel>
 				<AutoFitView />
 			</ReactFlow>
