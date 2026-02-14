@@ -167,6 +167,12 @@ function App() {
 				return;
 			}
 
+			if (e.key === "r" && state.goalId !== null) {
+				e.preventDefault();
+				state.reset();
+				return;
+			}
+
 			if (e.key === "s" && state.goalId !== null) {
 				e.preventDefault();
 				copyUrl();

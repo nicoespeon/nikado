@@ -31,14 +31,16 @@ describe("Reset button", () => {
 		render(<App />);
 
 		expect(
-			screen.getByRole("button", { name: "New graph" }),
+			screen.getByRole("button", { name: "New graph (R)" }),
 		).toBeInTheDocument();
 	});
 
 	it("is disabled when the graph is empty", () => {
 		render(<App />);
 
-		expect(screen.getByRole("button", { name: "New graph" })).toBeDisabled();
+		expect(
+			screen.getByRole("button", { name: "New graph (R)" }),
+		).toBeDisabled();
 	});
 
 	it("is enabled when a goal exists", async () => {
@@ -53,7 +55,7 @@ describe("Reset button", () => {
 		await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
 
 		expect(
-			screen.getByRole("button", { name: "New graph" }),
+			screen.getByRole("button", { name: "New graph (R)" }),
 		).not.toBeDisabled();
 	});
 
@@ -68,7 +70,29 @@ describe("Reset button", () => {
 		await user.keyboard("Goal{Enter}");
 		await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
 
-		await user.click(screen.getByRole("button", { name: "New graph" }));
+		await user.click(screen.getByRole("button", { name: "New graph (R)" }));
+
+		await waitFor(() => {
+			expect(useGraphStore.getState().goalId).toBeNull();
+			expect(useGraphStore.getState().tasks).toHaveLength(0);
+			expect(
+				screen.getByText(/double-click or press space to create your goal/i),
+			).toBeInTheDocument();
+		});
+	});
+
+	it("clears the graph with 'r' keyboard shortcut", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+		await user.keyboard("r");
 
 		await waitFor(() => {
 			expect(useGraphStore.getState().goalId).toBeNull();
