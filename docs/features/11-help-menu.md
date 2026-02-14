@@ -23,23 +23,32 @@ A modal overlay triggered by the Help (?) button in the control menu. Two sectio
 | Enter              | Create sibling            |
 | e / F2             | Edit label                |
 | Escape             | Cancel editing            |
-| Arrow Up           | Navigate to parent        |
-| Arrow Down         | Navigate to first child   |
-| Arrow Left/Right   | Navigate between siblings |
+| d                  | Toggle done               |
 | Delete / Backspace | Delete task               |
-| Ctrl+Z             | Undo                      |
-| Ctrl+Shift+Z       | Redo                      |
+| Arrow Left         | Navigate to parent        |
+| Arrow Right        | Navigate to first child   |
+| Arrow Up/Down      | Navigate between siblings |
+| Ctrl/⌘+Z           | Undo                      |
+| Ctrl/⌘+Shift+Z     | Redo                      |
+| + / -              | Zoom in / out             |
+| 0                  | Fit view                  |
+| t                  | Cycle theme               |
+| r                  | Reset                     |
+| s                  | Share (copy URL)          |
+| c                  | Copy as text              |
+| x                  | Export as image           |
 | ?                  | Toggle help               |
 
 **Getting started**
 
-Brief guidance (3-5 bullets):
+Brief guidance (4 bullets + links). Bold the key action in each bullet. Light emoji per bullet.
 
-- Create a goal: the main change you want to achieve
-- Break it into sub-tasks: press Tab on any task
-- Work from the leaves up: start with tasks that have no sub-tasks
-- Share your graph: click Share to copy the URL
-- Learn more about the [Mikado Method](https://mikadomethod.info/)
+- 🎯 **Set your goal.** The big change you want to make.
+- 🧩 **Break it down.** Press Tab to add sub-tasks. Keep splitting until each piece is small enough to do.
+- 🍃 **Work from the leaves.** Start with tasks that have no children. Mark them done, then move up.
+- ⏱️ **Timebox your work.** Give yourself ~15 min per task. If you can't finish: pause, break it into smaller tasks, revert your changes, and pick a new leaf.
+- 🔗 **Share your progress.** Click Share to copy a URL with your full graph.
+- Links: [Read this intro](https://understandlegacycode.com/blog/a-process-to-do-safe-changes-in-a-complex-codebase) or check out the [book](https://mikadomethod.info/).
 
 ### Use `<dialog>` element
 

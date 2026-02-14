@@ -13,6 +13,7 @@ import { TaskNode } from "./components/nodes/TaskNode";
 import { CopyMarkdownButton } from "./components/CopyMarkdownButton";
 import { ExportButton } from "./components/ExportButton";
 import { exportGraphAsImage } from "./components/export-image";
+import { HelpMenu } from "./components/HelpMenu";
 import { ResetButton } from "./components/ResetButton";
 import { ShareButton } from "./components/ShareButton";
 import { ThemeToggle } from "./components/ThemeToggle";
@@ -86,6 +87,7 @@ function App() {
 	} | null>(null);
 	const rawNodes = toReactFlowNodes(graph, nodeSizes);
 	const edges = toReactFlowEdges(graph);
+	const [helpOpen, setHelpOpen] = useState(false);
 	const isEmpty = graph.goalId === null;
 	const selectedNodeId = graph.selectedNodeId;
 
@@ -131,6 +133,12 @@ function App() {
 				active instanceof HTMLTextAreaElement
 			)
 				return;
+
+			if (e.key === "Escape" && helpOpen) {
+				e.preventDefault();
+				setHelpOpen(false);
+				return;
+			}
 
 			const state = useGraphStore.getState();
 
@@ -245,6 +253,12 @@ function App() {
 				return;
 			}
 
+			if (e.key === "?") {
+				e.preventDefault();
+				setHelpOpen((prev) => !prev);
+				return;
+			}
+
 			if (e.key.startsWith("Arrow") && !selectedNodeId) {
 				e.preventDefault();
 				if (state.goalId) state.selectNode(state.goalId);
@@ -289,7 +303,7 @@ function App() {
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [selectedNodeId]);
+	}, [selectedNodeId, helpOpen]);
 
 	function createGoalOnDoubleClick(event: React.MouseEvent) {
 		const isDoubleClick = event.detail === 2;
@@ -391,8 +405,28 @@ function App() {
 						<ThemeToggle theme={theme} />
 					</div>
 				</Panel>
+				<Panel position="bottom-right">
+					<button
+						type="button"
+						aria-label="Help (?)"
+						title="Help (?)"
+						onClick={() => {
+							setHelpOpen(true);
+						}}
+						className="flex items-center justify-center w-9 h-9 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-base font-semibold cursor-pointer"
+					>
+						?
+					</button>
+				</Panel>
 				<AutoFitView />
 			</ReactFlow>
+			{helpOpen && (
+				<HelpMenu
+					onClose={() => {
+						setHelpOpen(false);
+					}}
+				/>
+			)}
 		</div>
 	);
 }
