@@ -704,15 +704,11 @@ describe("App", () => {
 
 			await user.click(screen.getByRole("button", { name: "Share" }));
 
-			expect(
-				screen.getByRole("button", { name: "Link copied!" }),
-			).toBeInTheDocument();
+			expect(screen.getByText("Link copied!")).toBeInTheDocument();
 
 			await waitFor(
 				() => {
-					expect(
-						screen.getByRole("button", { name: "Share" }),
-					).toBeInTheDocument();
+					expect(screen.queryByText("Link copied!")).not.toBeInTheDocument();
 				},
 				{ timeout: 3000 },
 			);
