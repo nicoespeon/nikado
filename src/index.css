@@ -25,3 +25,32 @@ body {
 	width: 100vw;
 	height: 100vh;
 }
+
+/* We don't want to show the handles */
+.react-flow__handle {
+	width: 0 !important;
+	height: 0 !important;
+	min-width: 0 !important;
+	min-height: 0 !important;
+	border: none !important;
+	opacity: 0 !important;
+}
+
+/* Export-friendly node styles, applied temporarily during image capture */
+.exporting .react-flow__node [data-status] {
+	background: white !important;
+	color: #111827 !important;
+	border-color: #374151 !important;
+	border-width: 1px !important;
+	opacity: 1 !important;
+	box-shadow: none !important;
+}
+.exporting .react-flow__node [data-status="done"] span {
+	text-decoration: line-through;
+	text-decoration-thickness: 2px;
+	color: #9ca3af;
+}
+.exporting .react-flow__edge-path {
+	stroke: #374151 !important;
+	stroke-width: 1.5 !important;
+}

@@ -10,6 +10,8 @@ import {
 import "@xyflow/react/dist/style.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { TaskNode } from "./components/nodes/TaskNode";
+import { ExportButton } from "./components/ExportButton";
+import { exportGraphAsImage } from "./components/export-image";
 import { ResetButton } from "./components/ResetButton";
 import { ShareButton } from "./components/ShareButton";
 import { ThemeToggle } from "./components/ThemeToggle";
@@ -75,7 +77,10 @@ function App() {
 	const reactFlowRef = useRef<{
 		zoomIn: (options?: { duration?: number }) => Promise<boolean>;
 		zoomOut: (options?: { duration?: number }) => Promise<boolean>;
-		fitView: (options?: { duration?: number }) => Promise<boolean>;
+		fitView: (options?: {
+			padding?: number;
+			duration?: number;
+		}) => Promise<boolean>;
 	} | null>(null);
 	const rawNodes = toReactFlowNodes(graph, nodeSizes);
 	const edges = toReactFlowEdges(graph);
@@ -222,6 +227,16 @@ function App() {
 				return;
 			}
 
+			if (e.key === "x" && state.goalId !== null && reactFlowRef.current) {
+				e.preventDefault();
+				const goal = state.tasks.find((t) => t.id === state.goalId);
+				void exportGraphAsImage({
+					fitView: reactFlowRef.current.fitView,
+					goalLabel: goal?.label,
+				});
+				return;
+			}
+
 			if (e.key.startsWith("Arrow") && !selectedNodeId) {
 				e.preventDefault();
 				if (state.goalId) state.selectNode(state.goalId);
@@ -358,6 +373,7 @@ function App() {
 						<UndoButton />
 						<RedoButton />
 						<ResetButton />
+						<ExportButton />
 						<ShareButton />
 						<ThemeToggle theme={theme} />
 					</div>
