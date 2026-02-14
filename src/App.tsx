@@ -130,6 +130,9 @@ function App() {
 				return;
 			}
 
+			// Don't intercept browser shortcuts (e.g. ⌘R to reload)
+			if (e.metaKey || e.ctrlKey || e.altKey) return;
+
 			if (e.key === " ") {
 				e.preventDefault();
 				if (state.goalId === null) {
