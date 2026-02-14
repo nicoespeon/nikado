@@ -45,7 +45,9 @@ function getNodeByText(text: string) {
 }
 
 function getDoneButton(node: Element) {
-	const button = node.querySelector('button[aria-label="Done"]');
+	const button = node.querySelector(
+		'button[aria-label="Mark done"], button[aria-label="Mark undone"]',
+	);
 	if (!button) throw new Error("Done button not found");
 	return button;
 }

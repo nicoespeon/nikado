@@ -106,7 +106,8 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 					<button
 						type="button"
 						tabIndex={-1}
-						aria-label="Done"
+						title={isDone ? "Mark undone (D)" : "Mark done (D)"}
+						aria-label={isDone ? "Mark undone" : "Mark done"}
 						aria-pressed={isDone}
 						onClick={(e) => {
 							e.stopPropagation();
