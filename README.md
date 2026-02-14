@@ -1,4 +1,4 @@
-<h1 align="center"><img src="public/favicon.svg" alt="" width="32" height="32" style="vertical-align: middle;" /> Nikado</h1>
+<h1 align="center"><img src="public/favicon.svg" alt="" width="32" height="32" align="center" /> Nikado</h1>
 
 <p align="center">A visual tool for the <a href="https://understandlegacycode.com/blog/a-process-to-do-safe-changes-in-a-complex-codebase">Mikado Method</a>.</p>
 
