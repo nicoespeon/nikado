@@ -13,11 +13,11 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    ignore:
-      # Add any packages you want to exclude from updates here
-      # Example:
-      # - dependency-name: "package-name"
-      #   versions: ["1.x"]
+    # ignore:
+    # Add any packages you want to exclude from updates here
+    # Example:
+    # - dependency-name: "package-name"
+    #   versions: ["1.x"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
