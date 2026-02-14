@@ -72,7 +72,7 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 			data-leaf={data.isLeaf}
 			className={`rounded-lg shadow-sm w-fit min-w-[80px] max-w-[300px] ${statusStyles(data.status, data.isGoal, data.isLeaf)} ${focusRing}`}
 		>
-			{renderHandles(data.isGoal, data.direction)}
+			{renderHandles(data.isGoal)}
 			{isEditing ? (
 				<div className="relative">
 					<span
@@ -143,29 +143,15 @@ function statusStyles(status: string, isGoal: boolean, isLeaf: boolean) {
 		: `${regularSize} border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800`;
 }
 
-function renderHandles(isGoal: boolean, direction: "left" | "right") {
+function renderHandles(isGoal: boolean) {
 	if (isGoal) {
-		return (
-			<>
-				<Handle type="source" position={Position.Right} id="right" />
-				<Handle type="source" position={Position.Left} id="left" />
-			</>
-		);
-	}
-
-	if (direction === "right") {
-		return (
-			<>
-				<Handle type="target" position={Position.Left} id="left" />
-				<Handle type="source" position={Position.Right} id="right" />
-			</>
-		);
+		return <Handle type="source" position={Position.Right} id="right" />;
 	}
 
 	return (
 		<>
-			<Handle type="target" position={Position.Right} id="right" />
-			<Handle type="source" position={Position.Left} id="left" />
+			<Handle type="target" position={Position.Left} id="left" />
+			<Handle type="source" position={Position.Right} id="right" />
 		</>
 	);
 }

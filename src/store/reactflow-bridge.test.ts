@@ -28,7 +28,6 @@ describe("toReactFlowNodes", () => {
 					status: "pending",
 					isGoal: true,
 					isLeaf: true,
-					direction: "right",
 				},
 			},
 		]);
@@ -65,7 +64,7 @@ describe("toReactFlowNodes", () => {
 		expect(childNode.position.x).toBeGreaterThan(goalNode.position.x);
 	});
 
-	test("splits children into right and left groups", () => {
+	test("positions all children to the right of the goal", () => {
 		const goal = createTask("Goal");
 		const c1 = createTask("C1");
 		const c2 = createTask("C2");
@@ -80,12 +79,11 @@ describe("toReactFlowNodes", () => {
 		};
 
 		const nodes = toReactFlowNodes(graph);
-		const rightNodes = nodes.filter(
-			(n) => n.data.direction === "right" && !n.data.isGoal,
-		);
-		const leftNodes = nodes.filter((n) => n.data.direction === "left");
+		const children = nodes.filter((n) => !n.data.isGoal);
 
-		expect(rightNodes.length + leftNodes.length).toBe(2);
+		for (const child of children) {
+			expect(child.position.x).toBeGreaterThan(0);
+		}
 	});
 
 	test("positions deeper nodes further from goal horizontally", () => {
@@ -104,35 +102,7 @@ describe("toReactFlowNodes", () => {
 
 		const [, childNode, grandchildNode] = toReactFlowNodes(graph);
 
-		expect(Math.abs(childNode.position.x)).toBeGreaterThan(0);
-		expect(Math.abs(grandchildNode.position.x)).toBeGreaterThan(
-			Math.abs(childNode.position.x),
-		);
-	});
-
-	test("sets direction for left-side subtree nodes", () => {
-		const goal = createTask("Goal");
-		const c1 = createTask("C1");
-		const c2 = createTask("C2");
-		const c3 = createTask("C3");
-		const graph: MikadoGraph = {
-			...emptyGraph(),
-			goalId: goal.id,
-			tasks: [goal, c1, c2, c3],
-			dependencies: [
-				{ from: goal.id, to: c1.id },
-				{ from: goal.id, to: c2.id },
-				{ from: goal.id, to: c3.id },
-			],
-		};
-
-		const nodes = toReactFlowNodes(graph);
-		const leftNodes = nodes.filter((n) => n.data.direction === "left");
-
-		expect(leftNodes.length).toBeGreaterThan(0);
-		for (const node of leftNodes) {
-			expect(node.position.x).toBeLessThan(0);
-		}
+		expect(grandchildNode.position.x).toBeGreaterThan(childNode.position.x);
 	});
 
 	test("returns empty array for empty graph", () => {
@@ -153,11 +123,13 @@ describe("toReactFlowEdges", () => {
 
 		const edges = toReactFlowEdges(graph);
 
-		expect(edges).toMatchObject([
+		expect(edges).toEqual([
 			{
 				id: `${parent.id}-${child.id}`,
 				source: parent.id,
 				target: child.id,
+				sourceHandle: "right",
+				targetHandle: "left",
 			},
 		]);
 	});

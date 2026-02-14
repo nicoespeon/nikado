@@ -69,7 +69,7 @@ function App() {
 	const graph = useGraphStore();
 	const [nodeSizes, setNodeSizes] = useState<NodeSizes>(new Map());
 	const rawNodes = toReactFlowNodes(graph, nodeSizes);
-	const edges = toReactFlowEdges(graph, nodeSizes);
+	const edges = toReactFlowEdges(graph);
 	const isEmpty = graph.goalId === null;
 	const selectedNodeId = graph.selectedNodeId;
 
@@ -192,21 +192,27 @@ function App() {
 				return;
 			}
 
-			if (e.key === "ArrowUp" && selectedNodeId) {
+			if (e.key.startsWith("Arrow") && !selectedNodeId) {
+				e.preventDefault();
+				if (state.goalId) state.selectNode(state.goalId);
+				return;
+			}
+
+			if (e.key === "ArrowLeft" && selectedNodeId) {
 				e.preventDefault();
 				const parentId = findParent(state, selectedNodeId);
 				if (parentId) state.selectNode(parentId);
 				return;
 			}
 
-			if (e.key === "ArrowDown" && selectedNodeId) {
+			if (e.key === "ArrowRight" && selectedNodeId) {
 				e.preventDefault();
 				const children = findChildren(state, selectedNodeId);
 				if (children.length > 0) state.selectNode(children[0]);
 				return;
 			}
 
-			if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && selectedNodeId) {
+			if ((e.key === "ArrowUp" || e.key === "ArrowDown") && selectedNodeId) {
 				e.preventDefault();
 				const parentId = findParent(state, selectedNodeId);
 				if (!parentId) return;
@@ -216,7 +222,7 @@ function App() {
 				if (currentIndex === -1 || allSiblings.length <= 1) return;
 
 				const next =
-					e.key === "ArrowRight"
+					e.key === "ArrowDown"
 						? allSiblings[(currentIndex + 1) % allSiblings.length]
 						: allSiblings[
 								(currentIndex - 1 + allSiblings.length) % allSiblings.length

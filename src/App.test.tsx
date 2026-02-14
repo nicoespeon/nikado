@@ -628,6 +628,138 @@ describe("App", () => {
 		});
 	});
 
+	describe("arrow key navigation", () => {
+		it("selects the goal when pressing an arrow key with no selection", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			await user.keyboard("{ArrowDown}");
+
+			expect(useGraphStore.getState().selectedNodeId).toBe(getGoalId());
+		});
+
+		it("navigates to first child with ArrowRight", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Child{Enter}");
+			await waitFor(() =>
+				expect(screen.getByText("Child")).toBeInTheDocument(),
+			);
+
+			selectNode(getGoalId());
+			await user.keyboard("{ArrowRight}");
+
+			const childId = useGraphStore.getState().tasks[1].id;
+			expect(useGraphStore.getState().selectedNodeId).toBe(childId);
+		});
+
+		it("navigates to parent with ArrowLeft", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Child{Enter}");
+			await waitFor(() =>
+				expect(screen.getByText("Child")).toBeInTheDocument(),
+			);
+
+			const childId = useGraphStore.getState().tasks[1].id;
+			selectNode(childId);
+			await user.keyboard("{ArrowLeft}");
+
+			expect(useGraphStore.getState().selectedNodeId).toBe(getGoalId());
+		});
+
+		it("navigates between siblings with ArrowUp/ArrowDown and wraps", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			// Create two children
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Child A{Enter}");
+			await waitFor(() =>
+				expect(screen.getByText("Child A")).toBeInTheDocument(),
+			);
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Child B{Enter}");
+			await waitFor(() =>
+				expect(screen.getByText("Child B")).toBeInTheDocument(),
+			);
+
+			const childAId = useGraphStore.getState().tasks[1].id;
+			const childBId = useGraphStore.getState().tasks[2].id;
+
+			// ArrowDown from A goes to B
+			selectNode(childAId);
+			await user.keyboard("{ArrowDown}");
+			expect(useGraphStore.getState().selectedNodeId).toBe(childBId);
+
+			// ArrowDown from B wraps to A
+			await user.keyboard("{ArrowDown}");
+			expect(useGraphStore.getState().selectedNodeId).toBe(childAId);
+
+			// ArrowUp from A wraps to B
+			await user.keyboard("{ArrowUp}");
+			expect(useGraphStore.getState().selectedNodeId).toBe(childBId);
+		});
+
+		it("does nothing when pressing arrow keys with no goal", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.keyboard("{ArrowDown}");
+
+			expect(useGraphStore.getState().selectedNodeId).toBeNull();
+		});
+	});
+
 	describe("URL state persistence", () => {
 		it("updates URL hash after creating a goal", async () => {
 			const user = userEvent.setup();
