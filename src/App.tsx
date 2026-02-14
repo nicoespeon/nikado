@@ -375,15 +375,19 @@ function App() {
 				/>
 				<Panel position="top-right">
 					<div className="flex gap-1">
-						<ZoomInButton />
-						<ZoomOutButton />
-						<FitViewButton />
 						<UndoButton />
 						<RedoButton />
 						<ResetButton />
 						<ExportButton />
 						<CopyMarkdownButton />
 						<ShareButton />
+					</div>
+				</Panel>
+				<Panel position="bottom-left">
+					<div className="flex gap-1">
+						<ZoomInButton />
+						<ZoomOutButton />
+						<FitViewButton />
 						<ThemeToggle theme={theme} />
 					</div>
 				</Panel>
