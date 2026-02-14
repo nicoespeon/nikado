@@ -684,12 +684,25 @@ describe("App", () => {
 	});
 
 	describe("Share button", () => {
+		it("is disabled when the graph is empty", () => {
+			render(<App />);
+
+			expect(screen.getByRole("button", { name: "Share (S)" })).toBeDisabled();
+		});
+
 		it("copies current URL to clipboard", async () => {
 			const writeText = vi
 				.spyOn(navigator.clipboard, "writeText")
 				.mockResolvedValue(undefined);
 			const user = userEvent.setup();
 			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
 
 			await user.click(screen.getByRole("button", { name: "Share (S)" }));
 
@@ -703,6 +716,13 @@ describe("App", () => {
 				.mockResolvedValue(undefined);
 			const user = userEvent.setup();
 			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
 
 			await user.click(screen.getByRole("button", { name: "Share (S)" }));
 

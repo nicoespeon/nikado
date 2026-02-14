@@ -1,7 +1,9 @@
 import { copyUrl, useCopied } from "../hooks/use-share";
+import { useGraphStore } from "../store/graph-store";
 
 export function ShareButton() {
 	const copied = useCopied();
+	const isEmpty = useGraphStore((s) => s.goalId === null);
 	const label = copied ? "Link copied!" : "Share (S)";
 
 	return (
@@ -10,8 +12,9 @@ export function ShareButton() {
 				type="button"
 				aria-label={label}
 				title={label}
+				disabled={isEmpty}
 				onClick={copyUrl}
-				className="flex items-center justify-center w-7 h-7 rounded bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-sm cursor-pointer"
+				className="flex items-center justify-center w-7 h-7 rounded bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-sm cursor-pointer disabled:opacity-40 disabled:cursor-default"
 			>
 				{copied ? (
 					"\u2713"

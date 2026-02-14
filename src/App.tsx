@@ -11,6 +11,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { useCallback, useEffect, useState } from "react";
 import { TaskNode } from "./components/nodes/TaskNode";
+import { ResetButton } from "./components/ResetButton";
 import { ShareButton } from "./components/ShareButton";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { copyUrl } from "./hooks/use-share";
@@ -166,7 +167,7 @@ function App() {
 				return;
 			}
 
-			if (e.key === "s") {
+			if (e.key === "s" && state.goalId !== null) {
 				e.preventDefault();
 				copyUrl();
 				return;
@@ -260,6 +261,7 @@ function App() {
 				<Controls />
 				<Panel position="top-right">
 					<div className="flex gap-1">
+						<ResetButton />
 						<ShareButton />
 						<ThemeToggle theme={theme} />
 					</div>

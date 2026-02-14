@@ -29,6 +29,7 @@ type GraphStore = MikadoGraph & {
 	startEditing: (taskId: TaskId) => void;
 	stopEditing: () => void;
 	selectNode: (taskId: TaskId | null) => void;
+	reset: () => void;
 };
 
 export const useGraphStore = create<GraphStore>((set, get) => ({
@@ -110,5 +111,15 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 
 	selectNode(taskId) {
 		set({ selectedNodeId: taskId });
+	},
+
+	reset() {
+		set({
+			goalId: null,
+			tasks: [],
+			dependencies: [],
+			editingNodeId: null,
+			selectedNodeId: null,
+		});
 	},
 }));
