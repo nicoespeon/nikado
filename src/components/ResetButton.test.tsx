@@ -31,20 +31,18 @@ describe("Reset button", () => {
 		window.history.replaceState(null, "", window.location.pathname);
 	});
 
-	it("renders a 'New graph' button", () => {
+	it("renders a 'Reset' button", () => {
 		render(<App />);
 
 		expect(
-			screen.getByRole("button", { name: "New graph (R)" }),
+			screen.getByRole("button", { name: "Reset (R)" }),
 		).toBeInTheDocument();
 	});
 
 	it("is disabled when the graph is empty", () => {
 		render(<App />);
 
-		expect(
-			screen.getByRole("button", { name: "New graph (R)" }),
-		).toBeDisabled();
+		expect(screen.getByRole("button", { name: "Reset (R)" })).toBeDisabled();
 	});
 
 	it("is enabled when a goal exists", async () => {
@@ -59,7 +57,7 @@ describe("Reset button", () => {
 		await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
 
 		expect(
-			screen.getByRole("button", { name: "New graph (R)" }),
+			screen.getByRole("button", { name: "Reset (R)" }),
 		).not.toBeDisabled();
 	});
 
@@ -74,7 +72,7 @@ describe("Reset button", () => {
 		await user.keyboard("Goal{Enter}");
 		await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
 
-		await user.click(screen.getByRole("button", { name: "New graph (R)" }));
+		await user.click(screen.getByRole("button", { name: "Reset (R)" }));
 
 		await waitFor(() => {
 			expect(useGraphStore.getState().goalId).toBeNull();

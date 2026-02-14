@@ -143,7 +143,7 @@ describe("Undo/Redo", () => {
 		expect(redoButton()).not.toBeDisabled();
 
 		// Reset is a new action that should clear the redo stack
-		await user.click(screen.getByRole("button", { name: /new graph/i }));
+		await user.click(screen.getByRole("button", { name: /reset/i }));
 		await waitFor(() => {
 			expect(useGraphStore.getState().goalId).toBeNull();
 		});
