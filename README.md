@@ -31,8 +31,6 @@ pnpm install
 pnpm dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173).
-
 ## Scripts
 
 You'll mostly run `pnpm dev` to run the app locally.
