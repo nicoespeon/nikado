@@ -110,11 +110,15 @@ function computeLayout(graph: MikadoGraph, nodeSizes: NodeSizes) {
 	// Dagre returns CENTER positions; ReactFlow expects TOP-LEFT.
 	// Make all positions relative to the goal's top-left corner.
 	// Flip y-axis so first children appear at the top and new siblings below.
+	//
+	// When flipping y, the dagre bottom edge becomes the screen top edge.
+	// So screen_top = -(dagre_center_y + height/2).
+	// We normalize so the goal sits at (0, 0).
 	const goalPos = g.node(graph.goalId) as { x: number; y: number };
 	const goalSize = nodeSize(graph.goalId, nodeSizes);
-	const goalTopLeft = {
+	const goalRef = {
 		x: goalPos.x - goalSize.width / 2,
-		y: goalPos.y - goalSize.height / 2,
+		y: goalPos.y + goalSize.height / 2,
 	};
 
 	// Left-align nodes within the same rank (same dagre x-center).
@@ -146,8 +150,8 @@ function computeLayout(graph: MikadoGraph, nodeSizes: NodeSizes) {
 		const size = nodeSize(task.id, nodeSizes);
 		const offset = leftAlignOffset.get(task.id) ?? 0;
 		result.set(task.id, {
-			x: pos.x - size.width / 2 - goalTopLeft.x - offset,
-			y: -(pos.y - size.height / 2 - goalTopLeft.y),
+			x: pos.x - size.width / 2 - goalRef.x - offset,
+			y: goalRef.y - pos.y - size.height / 2,
 		});
 	}
 
