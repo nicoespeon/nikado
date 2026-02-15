@@ -9,11 +9,11 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { TaskNode } from "./components/nodes/TaskNode";
 import { CopyMarkdownButton } from "./components/CopyMarkdownButton";
-import { ExportButton } from "./components/ExportButton";
 import { exportGraphAsImage } from "./components/export-image";
+import { ExportButton } from "./components/ExportButton";
 import { HelpMenu } from "./components/HelpMenu";
+import { TaskNode } from "./components/nodes/TaskNode";
 import { ResetButton } from "./components/ResetButton";
 import { ShareButton } from "./components/ShareButton";
 import { ThemeToggle } from "./components/ThemeToggle";
@@ -289,11 +289,6 @@ function App() {
 
 			if (e.key === "ArrowLeft" && selectedNodeId) {
 				e.preventDefault();
-				const children = findChildren(state, selectedNodeId);
-				if (children.length > 0 && !state.collapsedNodes.has(selectedNodeId)) {
-					state.collapseNode(selectedNodeId);
-					return;
-				}
 				const parentId = findParent(state, selectedNodeId);
 				if (parentId) state.selectNode(parentId);
 				return;
