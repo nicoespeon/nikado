@@ -7,7 +7,8 @@
 			"Bash(ls:*)",
 			"Bash(pnpm update:*)",
 			"Bash(pnpm add:*)",
-			"Bash(npx tsc:*)"
+			"Bash(npx tsc:*)",
+			"Bash(gh auth status:*)"
 		]
 	}
 }
