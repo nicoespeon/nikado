@@ -108,6 +108,33 @@ describe("toReactFlowNodes", () => {
 		expect(grandchildNode.position.x).toBeGreaterThan(childNode.position.x);
 	});
 
+	test("left-aligns siblings with different widths", () => {
+		const goal = createTask("Goal");
+		const narrow = createTask("Short");
+		const wide = createTask("A much wider task label");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, narrow, wide],
+			dependencies: [
+				{ from: goal.id, to: narrow.id },
+				{ from: goal.id, to: wide.id },
+			],
+		};
+
+		const nodeSizes = new Map([
+			[goal.id, { width: 150, height: 40 }],
+			[narrow.id, { width: 100, height: 40 }],
+			[wide.id, { width: 250, height: 40 }],
+		]);
+
+		const nodes = toReactFlowNodes(graph, nodeSizes);
+		const narrowNode = nodes.find((n) => n.id === narrow.id)!;
+		const wideNode = nodes.find((n) => n.id === wide.id)!;
+
+		expect(narrowNode.position.x).toBe(wideNode.position.x);
+	});
+
 	test("returns empty array for empty graph", () => {
 		expect(toReactFlowNodes(emptyGraph())).toEqual([]);
 	});

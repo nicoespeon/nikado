@@ -95,7 +95,7 @@ function computeLayout(graph: MikadoGraph, nodeSizes: NodeSizes) {
 	if (!graph.goalId) return result;
 
 	const g = new dagre.graphlib.Graph();
-	g.setGraph({ rankdir: "LR", ranksep: 70, nodesep: 10 });
+	g.setGraph({ rankdir: "LR", ranksep: 70, nodesep: 20 });
 	g.setDefaultEdgeLabel(() => ({}));
 
 	for (const task of graph.tasks) {
@@ -117,13 +117,36 @@ function computeLayout(graph: MikadoGraph, nodeSizes: NodeSizes) {
 		y: goalPos.y - goalSize.height / 2,
 	};
 
+	// Left-align nodes within the same rank (same dagre x-center).
+	// Dagre centers nodes, so siblings with different widths have misaligned left edges.
+	const nodesByRank = new Map<number, { id: TaskId; leftEdge: number }[]>();
+	for (const task of graph.tasks) {
+		const pos = g.node(task.id) as { x: number; y: number };
+		const size = nodeSize(task.id, nodeSizes);
+		const leftEdge = pos.x - size.width / 2;
+		const rankX = Math.round(pos.x);
+		const group = nodesByRank.get(rankX) ?? [];
+		group.push({ id: task.id, leftEdge });
+		nodesByRank.set(rankX, group);
+	}
+
+	const leftAlignOffset = new Map<TaskId, number>();
+	for (const group of nodesByRank.values()) {
+		if (group.length <= 1) continue;
+		const minLeftEdge = Math.min(...group.map((n) => n.leftEdge));
+		for (const node of group) {
+			leftAlignOffset.set(node.id, node.leftEdge - minLeftEdge);
+		}
+	}
+
 	result.set(graph.goalId, { x: 0, y: 0 });
 	for (const task of graph.tasks) {
 		if (task.id === graph.goalId) continue;
 		const pos = g.node(task.id) as { x: number; y: number };
 		const size = nodeSize(task.id, nodeSizes);
+		const offset = leftAlignOffset.get(task.id) ?? 0;
 		result.set(task.id, {
-			x: pos.x - size.width / 2 - goalTopLeft.x,
+			x: pos.x - size.width / 2 - goalTopLeft.x - offset,
 			y: -(pos.y - size.height / 2 - goalTopLeft.y),
 		});
 	}
