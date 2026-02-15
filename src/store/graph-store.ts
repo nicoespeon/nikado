@@ -132,12 +132,13 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 	removeTask(taskId) {
 		set((state) => {
 			const h = pushHistory(history(state), snapshot(state));
+			const parentId = findParent(state, taskId);
 			const newGraph = removeTask(state, taskId);
 			const taskIds = new Set(newGraph.tasks.map((t) => t.id));
 			return {
 				...newGraph,
 				goalId: state.goalId === taskId ? null : state.goalId,
-				selectedNodeId: null,
+				selectedNodeId: parentId ?? null,
 				editingNodeId: null,
 				collapsedNodes: pruneCollapsed(state.collapsedNodes, taskIds),
 				...h,

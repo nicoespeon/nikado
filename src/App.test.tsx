@@ -596,6 +596,7 @@ describe("App", () => {
 			expect(useGraphStore.getState().tasks).toHaveLength(1);
 			expect(screen.queryByText("Leaf")).not.toBeInTheDocument();
 			expect(screen.getByText("Goal")).toBeInTheDocument();
+			expect(useGraphStore.getState().selectedNodeId).toBe(getGoalId());
 		});
 	});
 
@@ -636,6 +637,7 @@ describe("App", () => {
 			expect(screen.queryByText("Middle")).not.toBeInTheDocument();
 			expect(screen.queryByText("Leaf")).not.toBeInTheDocument();
 			expect(screen.getByText("Goal")).toBeInTheDocument();
+			expect(useGraphStore.getState().selectedNodeId).toBe(getGoalId());
 		});
 	});
 
@@ -664,6 +666,7 @@ describe("App", () => {
 		await waitFor(() => {
 			expect(useGraphStore.getState().goalId).toBeNull();
 			expect(useGraphStore.getState().tasks).toHaveLength(0);
+			expect(useGraphStore.getState().selectedNodeId).toBeNull();
 			expect(
 				screen.getByText(/double-click or press space to create your goal/i),
 			).toBeInTheDocument();
