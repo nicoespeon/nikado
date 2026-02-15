@@ -6,7 +6,8 @@
 			"WebFetch(domain:reactflow.dev)",
 			"Bash(ls:*)",
 			"Bash(pnpm update:*)",
-			"Bash(pnpm add:*)"
+			"Bash(pnpm add:*)",
+			"Bash(npx tsc:*)"
 		]
 	}
 }

@@ -1,7 +1,9 @@
 import dagre from "@dagrejs/dagre";
 import type { Edge, Node } from "@xyflow/react";
 import {
+	findChildren,
 	findLeafTasks,
+	isNodeHidden,
 	type MikadoGraph,
 	type TaskId,
 	type TaskLabel,
@@ -13,6 +15,9 @@ export type TaskNodeData = {
 	status: string;
 	isGoal: boolean;
 	isLeaf: boolean;
+	hasChildren: boolean;
+	isCollapsed: boolean;
+	childCount: number;
 };
 
 export type NodeSizes = Map<string, { width: number; height: number }>;
@@ -23,11 +28,25 @@ const DEFAULT_NODE_HEIGHT = 40;
 export function toReactFlowNodes(
 	graph: MikadoGraph,
 	nodeSizes: NodeSizes = new Map(),
+	collapsedNodes = new Set<TaskId>(),
 ): Node<TaskNodeData>[] {
-	const layout = computeLayout(graph, nodeSizes);
+	const visibleTasks = graph.tasks.filter(
+		(t) => !isNodeHidden(graph, t.id, collapsedNodes),
+	);
+	const visibleGraph: MikadoGraph = {
+		...graph,
+		tasks: visibleTasks,
+		dependencies: graph.dependencies.filter(
+			(d) =>
+				!isNodeHidden(graph, d.from, collapsedNodes) &&
+				!isNodeHidden(graph, d.to, collapsedNodes),
+		),
+	};
+
+	const layout = computeLayout(visibleGraph, nodeSizes);
 	const leafIds = new Set(findLeafTasks(graph).map((t) => t.id));
 
-	return graph.tasks.map((task) => ({
+	return visibleTasks.map((task) => ({
 		id: task.id,
 		type: "task",
 		position: layout.get(task.id) ?? { x: 0, y: 0 },
@@ -37,18 +56,30 @@ export function toReactFlowNodes(
 			status: task.status,
 			isGoal: task.id === graph.goalId,
 			isLeaf: leafIds.has(task.id),
+			hasChildren: findChildren(graph, task.id).length > 0,
+			isCollapsed: collapsedNodes.has(task.id),
+			childCount: findChildren(graph, task.id).length,
 		},
 	}));
 }
 
-export function toReactFlowEdges(graph: MikadoGraph): Edge[] {
-	return graph.dependencies.map((dep) => ({
-		id: `${dep.from}-${dep.to}`,
-		source: dep.from,
-		target: dep.to,
-		sourceHandle: "right",
-		targetHandle: "left",
-	}));
+export function toReactFlowEdges(
+	graph: MikadoGraph,
+	collapsedNodes = new Set<TaskId>(),
+): Edge[] {
+	return graph.dependencies
+		.filter(
+			(dep) =>
+				!isNodeHidden(graph, dep.from, collapsedNodes) &&
+				!isNodeHidden(graph, dep.to, collapsedNodes),
+		)
+		.map((dep) => ({
+			id: `${dep.from}-${dep.to}`,
+			source: dep.from,
+			target: dep.to,
+			sourceHandle: "right",
+			targetHandle: "left",
+		}));
 }
 
 function nodeSize(id: string, nodeSizes: NodeSizes) {

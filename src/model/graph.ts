@@ -188,6 +188,19 @@ export function toMarkdown(graph: MikadoGraph) {
 	return walk(graph.goalId, 0);
 }
 
+export function isNodeHidden(
+	graph: MikadoGraph,
+	taskId: TaskId,
+	collapsedNodes: Set<TaskId>,
+) {
+	let current = findParent(graph, taskId);
+	while (current) {
+		if (collapsedNodes.has(current)) return true;
+		current = findParent(graph, current);
+	}
+	return false;
+}
+
 function collectDescendants(graph: MikadoGraph, taskId: TaskId) {
 	const ids = new Set<TaskId>([taskId]);
 	const queue = findChildren(graph, taskId);

@@ -12,9 +12,12 @@ export function useUrlSync() {
 	useEffect(() => {
 		const hash = window.location.hash.slice(1);
 		if (hash) {
-			const graph = deserializeGraph(hash);
-			if (graph) {
-				useGraphStore.setState(graph);
+			const result = deserializeGraph(hash);
+			if (result) {
+				useGraphStore.setState({
+					...result.graph,
+					collapsedNodes: result.collapsedNodes,
+				});
 			}
 		}
 
@@ -34,7 +37,7 @@ export function useUrlSync() {
 					return;
 				}
 
-				const serialized = serializeGraph(graphData);
+				const serialized = serializeGraph(graphData, state.collapsedNodes);
 				if (serialized === lastSerialized) return;
 
 				lastSerialized = serialized;

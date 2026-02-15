@@ -25,9 +25,11 @@ const SHORTCUT_CATEGORIES: readonly ShortcutCategory[] = [
 	{
 		label: "Navigation",
 		shortcuts: [
-			["\u2190", "Navigate to parent"],
-			["\u2192", "Navigate to first child"],
+			["\u2190", "Collapse / navigate to parent"],
+			["\u2192", "Expand / navigate to first child"],
 			["\u2191 / \u2193", "Navigate between siblings"],
+			["h", "Toggle collapse/expand"],
+			["[ / ]", "Collapse / Expand"],
 		],
 	},
 	{

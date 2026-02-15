@@ -1,4 +1,5 @@
 import { toPng } from "html-to-image";
+import { useGraphStore } from "../store/graph-store";
 
 export function deriveFilename(
 	goalLabel: string | undefined,
@@ -30,6 +31,15 @@ export async function exportGraphAsImage({
 	const container = document.querySelector<HTMLElement>(".react-flow");
 	const viewport = document.querySelector<HTMLElement>(".react-flow__viewport");
 	if (!container || !viewport) return;
+
+	// Expand all collapsed nodes so the full graph is captured
+	const store = useGraphStore.getState();
+	const previousCollapsedNodes = store.collapsedNodes;
+	if (previousCollapsedNodes.size > 0) {
+		store.expandAll();
+		// Let React re-render with all nodes visible
+		await new Promise((resolve) => setTimeout(resolve, 100));
+	}
 
 	// Fit all nodes in view so everything is visible and measured.
 	// Race with a timeout so the export proceeds even if fitView hangs.
@@ -73,5 +83,8 @@ export async function exportGraphAsImage({
 			path.style.strokeWidth = "";
 		}
 		container.classList.remove("exporting");
+		if (previousCollapsedNodes.size > 0) {
+			useGraphStore.setState({ collapsedNodes: previousCollapsedNodes });
+		}
 	}
 }

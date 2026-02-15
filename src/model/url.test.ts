@@ -5,6 +5,7 @@ import {
 	createGoal,
 	setTaskStatus,
 	type MikadoGraph,
+	type TaskId,
 } from "./graph";
 import { deserializeGraph, extractGraphData, serializeGraph } from "./url";
 
@@ -14,7 +15,7 @@ describe("serializeGraph / deserializeGraph round-trip", () => {
 
 		const result = deserializeGraph(serializeGraph(graph));
 
-		expect(result).toEqual(graph);
+		expect(result).toEqual({ graph, collapsedNodes: new Set() });
 	});
 
 	test("round-trips a graph with a single goal", () => {
@@ -22,7 +23,7 @@ describe("serializeGraph / deserializeGraph round-trip", () => {
 
 		const result = deserializeGraph(serializeGraph(graph));
 
-		expect(result).toEqual(graph);
+		expect(result).toEqual({ graph, collapsedNodes: new Set() });
 	});
 
 	test("round-trips a graph with tasks and dependencies", () => {
@@ -33,7 +34,7 @@ describe("serializeGraph / deserializeGraph round-trip", () => {
 
 		const result = deserializeGraph(serializeGraph(graph));
 
-		expect(result).toEqual(graph);
+		expect(result).toEqual({ graph, collapsedNodes: new Set() });
 	});
 
 	test("round-trips a graph with various task statuses", () => {
@@ -49,7 +50,27 @@ describe("serializeGraph / deserializeGraph round-trip", () => {
 
 		const result = deserializeGraph(serializeGraph(graph));
 
-		expect(result).toEqual(graph);
+		expect(result).toEqual({ graph, collapsedNodes: new Set() });
+	});
+
+	test("round-trips collapsed nodes", () => {
+		let graph = createGoal(emptyGraph(), "Goal");
+		const goalId = graph.tasks[0].id;
+		graph = addSubTask(graph, goalId, "Child");
+		const collapsedNodes = new Set([goalId]);
+
+		const result = deserializeGraph(serializeGraph(graph, collapsedNodes));
+
+		expect(result).toEqual({ graph, collapsedNodes });
+	});
+
+	test("omits collapsedNodes from serialized output when empty", () => {
+		const graph = createGoal(emptyGraph(), "Goal");
+		const serialized = serializeGraph(graph, new Set());
+
+		const result = deserializeGraph(serialized);
+
+		expect(result).toEqual({ graph, collapsedNodes: new Set() });
 	});
 });
 
@@ -102,6 +123,59 @@ describe("deserializeGraph error handling", () => {
 		const encoded = compressToEncodedURIComponent(JSON.stringify(42));
 
 		expect(deserializeGraph(encoded)).toBeNull();
+	});
+
+	test("returns null for invalid collapsedNodes (non-array)", () => {
+		const encoded = compressToEncodedURIComponent(
+			JSON.stringify({
+				goalId: null,
+				tasks: [],
+				dependencies: [],
+				collapsedNodes: "not-an-array",
+			}),
+		);
+
+		expect(deserializeGraph(encoded)).toBeNull();
+	});
+
+	test("returns null for collapsedNodes with non-string items", () => {
+		const encoded = compressToEncodedURIComponent(
+			JSON.stringify({
+				goalId: null,
+				tasks: [],
+				dependencies: [],
+				collapsedNodes: [42],
+			}),
+		);
+
+		expect(deserializeGraph(encoded)).toBeNull();
+	});
+
+	test("backward compatible: old URLs without collapsedNodes work", () => {
+		const encoded = compressToEncodedURIComponent(
+			JSON.stringify({
+				goalId: "id-1",
+				tasks: [{ id: "id-1", label: "Goal", status: "pending" }],
+				dependencies: [],
+			}),
+		);
+
+		const result = deserializeGraph(encoded);
+
+		expect(result).toEqual({
+			graph: {
+				goalId: "id-1" as TaskId,
+				tasks: [
+					{
+						id: "id-1" as TaskId,
+						label: "Goal",
+						status: "pending",
+					},
+				],
+				dependencies: [],
+			},
+			collapsedNodes: new Set(),
+		});
 	});
 });
 

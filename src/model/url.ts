@@ -2,13 +2,25 @@ import {
 	compressToEncodedURIComponent,
 	decompressFromEncodedURIComponent,
 } from "lz-string";
-import type { MikadoGraph, TaskStatus } from "./graph";
+import type { MikadoGraph, TaskId, TaskStatus } from "./graph";
 
-export function serializeGraph(graph: MikadoGraph) {
-	return compressToEncodedURIComponent(JSON.stringify(graph));
+type DeserializedState = {
+	graph: MikadoGraph;
+	collapsedNodes: Set<TaskId>;
+};
+
+export function serializeGraph(
+	graph: MikadoGraph,
+	collapsedNodes = new Set<TaskId>(),
+) {
+	const payload =
+		collapsedNodes.size > 0
+			? { ...graph, collapsedNodes: [...collapsedNodes] }
+			: graph;
+	return compressToEncodedURIComponent(JSON.stringify(payload));
 }
 
-export function deserializeGraph(urlString: string): MikadoGraph | null {
+export function deserializeGraph(urlString: string): DeserializedState | null {
 	if (!urlString.trim()) return null;
 
 	try {
@@ -18,7 +30,18 @@ export function deserializeGraph(urlString: string): MikadoGraph | null {
 		const data: unknown = JSON.parse(json);
 		if (!isValidGraph(data)) return null;
 
-		return data;
+		const obj = data as Record<string, unknown>;
+		const collapsedNodes = new Set<TaskId>(
+			Array.isArray(obj.collapsedNodes) ? (obj.collapsedNodes as TaskId[]) : [],
+		);
+
+		const graph: MikadoGraph = {
+			goalId: data.goalId,
+			tasks: data.tasks,
+			dependencies: data.dependencies,
+		};
+
+		return { graph, collapsedNodes };
 	} catch {
 		return null;
 	}
@@ -65,6 +88,15 @@ function isValidGraph(data: unknown): data is MikadoGraph {
 		const dep = d as Record<string, unknown>;
 		return typeof dep.from === "string" && typeof dep.to === "string";
 	});
+	if (!validDeps) return false;
 
-	return validDeps;
+	if (
+		obj.collapsedNodes !== undefined &&
+		(!Array.isArray(obj.collapsedNodes) ||
+			!obj.collapsedNodes.every((id: unknown) => typeof id === "string"))
+	) {
+		return false;
+	}
+
+	return true;
 }

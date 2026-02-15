@@ -122,6 +122,13 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 						{isDone ? "\u2713" : ""}
 					</button>
 					<span className="break-words">{data.label || DEFAULT_LABEL}</span>
+					{data.hasChildren && (
+						<CollapseButton
+							taskId={data.taskId}
+							isCollapsed={data.isCollapsed}
+							childCount={data.childCount}
+						/>
+					)}
 				</div>
 			)}
 			{isEditing && (
@@ -130,6 +137,69 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 				</span>
 			)}
 		</div>
+	);
+}
+
+function CollapseButton({
+	taskId,
+	isCollapsed,
+	childCount,
+}: {
+	taskId: TaskNodeData["taskId"];
+	isCollapsed: boolean;
+	childCount: number;
+}) {
+	const toggleCollapse = useGraphStore((s) => s.toggleCollapse);
+	const label = isCollapsed
+		? `Expand ${String(childCount)} subtasks (H)`
+		: "Collapse subtasks (H)";
+
+	return (
+		<button
+			type="button"
+			tabIndex={-1}
+			title={label}
+			aria-label={label}
+			aria-expanded={!isCollapsed}
+			data-collapse-toggle
+			onClick={(e) => {
+				e.stopPropagation();
+				toggleCollapse(taskId);
+			}}
+			className="nodrag ml-1 shrink-0 flex items-center gap-0.5 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 text-xs"
+		>
+			{isCollapsed ? (
+				<div className="relative">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="12"
+						height="12"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					>
+						<path d="m9 18 6-6-6-6" />
+					</svg>
+				</div>
+			) : (
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="12"
+					height="12"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+				>
+					<path d="m6 9 6 6 6-6" />
+				</svg>
+			)}
+		</button>
 	);
 }
 

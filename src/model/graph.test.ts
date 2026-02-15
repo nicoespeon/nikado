@@ -11,12 +11,14 @@ import {
 	findLeafTasks,
 	findParent,
 	findSiblings,
+	isNodeHidden,
 	markDone,
 	removeTask,
 	setTaskLabel,
 	setTaskStatus,
 	toMarkdown,
 	type MikadoGraph,
+	type TaskId,
 } from "./graph";
 
 describe("createGoal", () => {
@@ -756,5 +758,105 @@ describe("toMarkdown", () => {
 		};
 
 		expect(toMarkdown(graph)).toBe(["- [ ] Goal", "  - [ ] Parked"].join("\n"));
+	});
+});
+
+describe("isNodeHidden", () => {
+	test("returns false when no ancestors are collapsed", () => {
+		const goal = createTask("Goal");
+		const child = createTask("Child");
+		const grandchild = createTask("Grandchild");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child, grandchild],
+			dependencies: [
+				{ from: goal.id, to: child.id },
+				{ from: child.id, to: grandchild.id },
+			],
+		};
+
+		expect(isNodeHidden(graph, grandchild.id, new Set())).toBe(false);
+	});
+
+	test("returns true when immediate parent is collapsed", () => {
+		const goal = createTask("Goal");
+		const child = createTask("Child");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child],
+			dependencies: [{ from: goal.id, to: child.id }],
+		};
+
+		expect(isNodeHidden(graph, child.id, new Set([goal.id]))).toBe(true);
+	});
+
+	test("returns true when any ancestor is collapsed", () => {
+		const goal = createTask("Goal");
+		const child = createTask("Child");
+		const grandchild = createTask("Grandchild");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child, grandchild],
+			dependencies: [
+				{ from: goal.id, to: child.id },
+				{ from: child.id, to: grandchild.id },
+			],
+		};
+
+		expect(isNodeHidden(graph, grandchild.id, new Set([goal.id]))).toBe(true);
+	});
+
+	test("returns false for the collapsed node itself", () => {
+		const goal = createTask("Goal");
+		const child = createTask("Child");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child],
+			dependencies: [{ from: goal.id, to: child.id }],
+		};
+
+		expect(isNodeHidden(graph, goal.id, new Set([goal.id]))).toBe(false);
+	});
+
+	test("returns false for the root task", () => {
+		const goal = createTask("Goal");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal],
+		};
+
+		expect(isNodeHidden(graph, goal.id, new Set(["fake" as TaskId]))).toBe(
+			false,
+		);
+	});
+
+	test("only hides descendants of the collapsed branch", () => {
+		const goal = createTask("Goal");
+		const child1 = createTask("Child 1");
+		const child2 = createTask("Child 2");
+		const grandchild1 = createTask("Grandchild 1");
+		const grandchild2 = createTask("Grandchild 2");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child1, child2, grandchild1, grandchild2],
+			dependencies: [
+				{ from: goal.id, to: child1.id },
+				{ from: goal.id, to: child2.id },
+				{ from: child1.id, to: grandchild1.id },
+				{ from: child2.id, to: grandchild2.id },
+			],
+		};
+
+		const collapsed = new Set([child1.id]);
+		expect(isNodeHidden(graph, grandchild1.id, collapsed)).toBe(true);
+		expect(isNodeHidden(graph, grandchild2.id, collapsed)).toBe(false);
+		expect(isNodeHidden(graph, child1.id, collapsed)).toBe(false);
+		expect(isNodeHidden(graph, child2.id, collapsed)).toBe(false);
 	});
 });

@@ -85,8 +85,9 @@ function App() {
 			duration?: number;
 		}) => Promise<boolean>;
 	} | null>(null);
-	const rawNodes = toReactFlowNodes(graph, nodeSizes);
-	const edges = toReactFlowEdges(graph);
+	const collapsedNodes = useGraphStore((s) => s.collapsedNodes);
+	const rawNodes = toReactFlowNodes(graph, nodeSizes, collapsedNodes);
+	const edges = toReactFlowEdges(graph, collapsedNodes);
 	const [helpOpen, setHelpOpen] = useState(false);
 	const isEmpty = graph.goalId === null;
 	const selectedNodeId = graph.selectedNodeId;
@@ -267,8 +268,31 @@ function App() {
 				return;
 			}
 
+			if (e.key === "h" && selectedNodeId) {
+				e.preventDefault();
+				state.toggleCollapse(selectedNodeId);
+				return;
+			}
+
+			if (e.key === "[" && selectedNodeId) {
+				e.preventDefault();
+				state.collapseNode(selectedNodeId);
+				return;
+			}
+
+			if (e.key === "]" && selectedNodeId) {
+				e.preventDefault();
+				state.expandNode(selectedNodeId);
+				return;
+			}
+
 			if (e.key === "ArrowLeft" && selectedNodeId) {
 				e.preventDefault();
+				const children = findChildren(state, selectedNodeId);
+				if (children.length > 0 && !state.collapsedNodes.has(selectedNodeId)) {
+					state.collapseNode(selectedNodeId);
+					return;
+				}
 				const parentId = findParent(state, selectedNodeId);
 				if (parentId) state.selectNode(parentId);
 				return;
@@ -276,6 +300,10 @@ function App() {
 
 			if (e.key === "ArrowRight" && selectedNodeId) {
 				e.preventDefault();
+				if (state.collapsedNodes.has(selectedNodeId)) {
+					state.expandNode(selectedNodeId);
+					return;
+				}
 				const children = findChildren(state, selectedNodeId);
 				if (children.length > 0) state.selectNode(children[0]);
 				return;

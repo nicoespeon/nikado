@@ -4,6 +4,7 @@ import {
 	addSubTask as addSubTaskToGraph,
 	createGoal,
 	createTask,
+	findChildren,
 	findParent,
 	markDone,
 	removeTask,
@@ -42,6 +43,11 @@ type GraphStore = MikadoGraph &
 		redo: () => void;
 		canUndo: boolean;
 		canRedo: boolean;
+		collapsedNodes: Set<TaskId>;
+		toggleCollapse: (taskId: TaskId) => void;
+		collapseNode: (taskId: TaskId) => void;
+		expandNode: (taskId: TaskId) => void;
+		expandAll: () => void;
 	};
 
 function snapshot(state: MikadoGraph): MikadoGraph {
@@ -66,6 +72,7 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 	selectedNodeId: null,
 	canUndo: false,
 	canRedo: false,
+	collapsedNodes: new Set(),
 
 	createGoal(label) {
 		set((state) => {
@@ -125,11 +132,14 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 	removeTask(taskId) {
 		set((state) => {
 			const h = pushHistory(history(state), snapshot(state));
+			const newGraph = removeTask(state, taskId);
+			const taskIds = new Set(newGraph.tasks.map((t) => t.id));
 			return {
-				...removeTask(state, taskId),
+				...newGraph,
 				goalId: state.goalId === taskId ? null : state.goalId,
 				selectedNodeId: null,
 				editingNodeId: null,
+				collapsedNodes: pruneCollapsed(state.collapsedNodes, taskIds),
 				...h,
 				canUndo: h.past.length > 0,
 				canRedo: false,
@@ -222,6 +232,7 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 				dependencies: [],
 				editingNodeId: null,
 				selectedNodeId: null,
+				collapsedNodes: new Set(),
 				...h,
 				canUndo: h.past.length > 0,
 				canRedo: false,
@@ -234,6 +245,7 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 		const result = undoHistory(history(state), snapshot(state));
 		if (!result) return;
 
+		const taskIds = new Set(result.graph.tasks.map((t) => t.id));
 		set({
 			...result.graph,
 			...result.history,
@@ -241,6 +253,7 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 			selectedNodeId: null,
 			canUndo: result.history.past.length > 0,
 			canRedo: result.history.future.length > 0,
+			collapsedNodes: pruneCollapsed(state.collapsedNodes, taskIds),
 		});
 	},
 
@@ -249,6 +262,7 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 		const result = redoHistory(history(state), snapshot(state));
 		if (!result) return;
 
+		const taskIds = new Set(result.graph.tasks.map((t) => t.id));
 		set({
 			...result.graph,
 			...result.history,
@@ -256,6 +270,53 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 			selectedNodeId: null,
 			canUndo: result.history.past.length > 0,
 			canRedo: result.history.future.length > 0,
+			collapsedNodes: pruneCollapsed(state.collapsedNodes, taskIds),
 		});
 	},
+
+	toggleCollapse(taskId) {
+		set((state) => {
+			if (state.collapsedNodes.has(taskId)) {
+				const next = new Set(state.collapsedNodes);
+				next.delete(taskId);
+				return { collapsedNodes: next };
+			}
+			if (findChildren(state, taskId).length === 0) return {};
+			const next = new Set(state.collapsedNodes);
+			next.add(taskId);
+			return { collapsedNodes: next };
+		});
+	},
+
+	collapseNode(taskId) {
+		set((state) => {
+			if (state.collapsedNodes.has(taskId)) return {};
+			if (findChildren(state, taskId).length === 0) return {};
+			const next = new Set(state.collapsedNodes);
+			next.add(taskId);
+			return { collapsedNodes: next };
+		});
+	},
+
+	expandNode(taskId) {
+		set((state) => {
+			if (!state.collapsedNodes.has(taskId)) return {};
+			const next = new Set(state.collapsedNodes);
+			next.delete(taskId);
+			return { collapsedNodes: next };
+		});
+	},
+
+	expandAll() {
+		set({ collapsedNodes: new Set() });
+	},
 }));
+
+function pruneCollapsed(collapsedNodes: Set<TaskId>, validIds: Set<TaskId>) {
+	if (collapsedNodes.size === 0) return collapsedNodes;
+	const pruned = new Set<TaskId>();
+	for (const id of collapsedNodes) {
+		if (validIds.has(id)) pruned.add(id);
+	}
+	return pruned;
+}
