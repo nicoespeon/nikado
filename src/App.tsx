@@ -40,11 +40,12 @@ const nodeTypes: NodeTypes = { task: TaskNode };
 function AutoFitView() {
 	const { fitView } = useReactFlow();
 	const taskCount = useGraphStore((s) => s.tasks.length);
+	const collapsedCount = useGraphStore((s) => s.collapsedNodes.size);
 
 	useEffect(() => {
 		if (taskCount <= 1) return;
 		void fitView({ duration: 200 });
-	}, [taskCount, fitView]);
+	}, [taskCount, collapsedCount, fitView]);
 
 	return null;
 }
