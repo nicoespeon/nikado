@@ -78,6 +78,8 @@ function App() {
 	const { resolvedTheme, theme } = useTheme();
 	const graph = useGraphStore();
 	const [nodeSizes, setNodeSizes] = useState<NodeSizes>(new Map());
+	const pendingNodeSizes = useRef<NodeSizes | null>(null);
+	const editingNodeId = useGraphStore((s) => s.editingNodeId);
 	const reactFlowRef = useRef<{
 		zoomIn: (options?: { duration?: number }) => Promise<boolean>;
 		zoomOut: (options?: { duration?: number }) => Promise<boolean>;
@@ -106,26 +108,45 @@ function App() {
 		useGraphStore.getState().selectNode(null);
 	}, []);
 
-	const onNodesChange = useCallback((changes: NodeChange[]) => {
-		// Skip layout recomputation during editing to avoid focus loss
-		if (useGraphStore.getState().editingNodeId) return;
+	useEffect(() => {
+		if (editingNodeId) return;
+		if (!pendingNodeSizes.current) return;
 
-		setNodeSizes((prev) => {
-			let next = prev;
-			for (const change of changes) {
-				if (change.type !== "dimensions" || !change.dimensions) continue;
-				const existing = next.get(change.id);
-				if (
-					existing?.width === change.dimensions.width &&
-					existing.height === change.dimensions.height
-				)
-					continue;
-				if (next === prev) next = new Map(prev);
-				next.set(change.id, change.dimensions);
+		const flushed = pendingNodeSizes.current;
+		pendingNodeSizes.current = null;
+		setNodeSizes(flushed);
+	}, [editingNodeId]);
+
+	const onNodesChange = useCallback(
+		(changes: NodeChange[]) => {
+			const isEditing = !!useGraphStore.getState().editingNodeId;
+
+			const update = (prev: NodeSizes) => {
+				let next = prev;
+				for (const change of changes) {
+					if (change.type !== "dimensions" || !change.dimensions) continue;
+					const existing = next.get(change.id);
+					if (
+						existing?.width === change.dimensions.width &&
+						existing.height === change.dimensions.height
+					)
+						continue;
+					if (next === prev) next = new Map(prev);
+					next.set(change.id, change.dimensions);
+				}
+				return next;
+			};
+
+			if (isEditing) {
+				pendingNodeSizes.current = update(
+					pendingNodeSizes.current ?? new Map(nodeSizes),
+				);
+			} else {
+				setNodeSizes(update);
 			}
-			return next;
-		});
-	}, []);
+		},
+		[nodeSizes],
+	);
 
 	useEffect(() => {
 		function handleKeyDown(e: KeyboardEvent) {
