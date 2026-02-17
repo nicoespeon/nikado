@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { assert, describe, expect, test } from "vitest";
 import {
 	addSubTask,
 	createGoal,
@@ -161,8 +161,10 @@ describe("toReactFlowNodes", () => {
 		]);
 
 		const nodes = toReactFlowNodes(graph, nodeSizes);
-		const narrowNode = nodes.find((n) => n.id === narrow.id)!;
-		const wideNode = nodes.find((n) => n.id === wide.id)!;
+		const narrowNode = nodes.find((n) => n.id === narrow.id);
+		const wideNode = nodes.find((n) => n.id === wide.id);
+		assert(narrowNode, "narrow node not found");
+		assert(wideNode, "wide node not found");
 
 		expect(narrowNode.position.x).toBe(wideNode.position.x);
 	});
@@ -371,7 +373,8 @@ describe("node collisions", () => {
 
 	test("adding a sibling between existing tasks does not collide", () => {
 		let graph = createGoal(emptyGraph(), "Goal");
-		const goalId = graph.goalId!;
+		const goalId = graph.goalId;
+		assert(goalId, "goalId is null");
 		graph = addSubTask(graph, goalId, "First");
 		graph = addSubTask(graph, goalId, "Second");
 		graph = addSubTask(graph, goalId, "Third");
@@ -388,7 +391,8 @@ describe("node collisions", () => {
 
 	test("deep tree with varying sizes does not collide", () => {
 		let graph = createGoal(emptyGraph(), "Root goal");
-		const goalId = graph.goalId!;
+		const goalId = graph.goalId;
+		assert(goalId, "goalId is null");
 		graph = addSubTask(graph, goalId, "Child A");
 		const childAId = graph.tasks[graph.tasks.length - 1].id;
 		graph = addSubTask(graph, goalId, "Child B");
