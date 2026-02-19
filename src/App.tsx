@@ -2,6 +2,7 @@ import {
 	Background,
 	Panel,
 	ReactFlow,
+	useNodesInitialized,
 	useReactFlow,
 	type Node,
 	type NodeChange,
@@ -39,13 +40,15 @@ const nodeTypes: NodeTypes = { task: TaskNode };
 
 function AutoFitView() {
 	const { fitView } = useReactFlow();
+	const nodesReady = useNodesInitialized();
 	const taskCount = useGraphStore((s) => s.tasks.length);
 	const collapsedCount = useGraphStore((s) => s.collapsedNodes.size);
 
 	useEffect(() => {
 		if (taskCount <= 1) return;
+		if (!nodesReady) return;
 		void fitView({ duration: 200 });
-	}, [taskCount, collapsedCount, fitView]);
+	}, [taskCount, collapsedCount, nodesReady, fitView]);
 
 	return null;
 }
