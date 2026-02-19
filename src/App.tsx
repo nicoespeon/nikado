@@ -2,7 +2,6 @@ import {
 	Background,
 	Panel,
 	ReactFlow,
-	useNodesInitialized,
 	useReactFlow,
 	type Node,
 	type NodeChange,
@@ -40,15 +39,13 @@ const nodeTypes: NodeTypes = { task: TaskNode };
 
 function AutoFitView() {
 	const { fitView } = useReactFlow();
-	const nodesReady = useNodesInitialized();
 	const taskCount = useGraphStore((s) => s.tasks.length);
 	const collapsedCount = useGraphStore((s) => s.collapsedNodes.size);
 
 	useEffect(() => {
 		if (taskCount <= 1) return;
-		if (!nodesReady) return;
 		void fitView({ duration: 200 });
-	}, [taskCount, collapsedCount, nodesReady, fitView]);
+	}, [taskCount, collapsedCount, fitView]);
 
 	return null;
 }
@@ -422,6 +419,9 @@ function App() {
 				onPaneClick={onPaneClick}
 				onInit={(instance) => {
 					reactFlowRef.current = instance;
+					// Corrective fit after nodes finish rendering with final dimensions.
+					// fitView={true} fires before w-fit nodes are fully laid out.
+					setTimeout(() => void instance.fitView(), 200);
 				}}
 				edgesFocusable={false}
 				colorMode={resolvedTheme}
