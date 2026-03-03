@@ -104,7 +104,7 @@ function OutlineRowComponent({
 			aria-level={depth + 1}
 			aria-selected={isSelected}
 			style={{ paddingLeft: `${String(depth * 1.5)}rem` }}
-			className={`flex items-center gap-2 px-3 py-2 min-h-[44px] ${rowStyles(isGoal, isLeaf, isDone, isParked, isSelected)}`}
+			className={`flex items-center gap-2 px-3 py-2 min-h-[44px] ${rowStyles(isLeaf, isDone, isParked, isSelected)}`}
 			onClick={() => {
 				selectNode(taskId);
 			}}
@@ -186,7 +186,7 @@ function OutlineRowComponent({
 				</div>
 			) : (
 				<span
-					className={`${isGoal ? "text-lg font-semibold" : "text-sm"} ${isDone ? "line-through opacity-60" : ""}`}
+					className={`${isGoal ? "text-lg font-semibold" : "text-sm"} ${isSelected ? "font-semibold" : ""} ${isDone ? "line-through opacity-60" : ""}`}
 				>
 					{label}
 				</span>
@@ -201,7 +201,6 @@ function isLeafTask(graph: MikadoGraph, taskId: TaskId) {
 }
 
 function rowStyles(
-	isGoal: boolean,
 	isLeaf: boolean,
 	isDone: boolean,
 	isParked: boolean,
@@ -220,8 +219,6 @@ function rowStyles(
 			parts.push("border-l-green-500 dark:border-l-green-600 opacity-60");
 		} else if (isParked) {
 			parts.push("border-l-gray-300 dark:border-l-gray-600 opacity-60");
-		} else if (isGoal) {
-			parts.push("border-l-blue-500 dark:border-l-blue-400");
 		} else if (isLeaf) {
 			parts.push(
 				"border-l-amber-400 dark:border-l-amber-500 bg-amber-50/50 dark:bg-amber-950/20",
