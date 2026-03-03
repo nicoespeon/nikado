@@ -1,9 +1,18 @@
+import { useEffect } from "react";
 import { MobileActionBar } from "./components/MobileActionBar";
 import { OutlineView } from "./components/OutlineView";
 import { useGraphStore } from "./store/graph-store";
 
 function MobileView() {
 	const goalId = useGraphStore((s) => s.goalId);
+	const selectedNodeId = useGraphStore((s) => s.selectedNodeId);
+	const selectNode = useGraphStore((s) => s.selectNode);
+
+	useEffect(() => {
+		if (goalId && !selectedNodeId) {
+			selectNode(goalId);
+		}
+	}, [goalId, selectedNodeId, selectNode]);
 
 	if (!goalId) return <MobileEmptyState />;
 
