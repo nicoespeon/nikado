@@ -75,29 +75,12 @@ Detailed specs live in [docs/features/](docs/features/). They are numbered by de
 
 **Last completed feature: 13**
 
-### MVP
+### Ideas for later
 
-1. Task model & store (pure data layer)
-2. Create main goal
-3. Create sub-tasks
-4. Task status (done/undone/current/parked)
-5. Delete task (cascade)
-6. URL state persistence + share button
-7. Keyboard navigation + a11y
-
-### Post-MVP
-
-Features planned but not yet specced. Rough priority order:
-
-8. Control menu (custom toolbar replacing ReactFlow's default Controls)
-9. Undo/redo
-10. Export to image
-11. Help menu (keyboard shortcuts, Mikado method basics)
-12. Parking slot (park tasks blocked by external factors)
-13. Timebox timer (set/start/stop, default 15 min, time tracking per task/day)
-14. Local storage persistence
-15. Real-time collaboration (y.js + WebRTC, no server)
-16. User-facing docs (detailed guides beyond the help menu)
+- Parking slot (park tasks blocked by external factors)
+- Timebox timer (set/start/stop, default 15 min, time tracking per task/day)
+- Real-time collaboration (y.js + WebRTC, no server)
+- Local storage persistence to allow N graphs (pro-feature?)
 
 ## Writing Style
 
