@@ -7,6 +7,7 @@ import {
 	findChildren,
 	findParent,
 	markDone,
+	markUndone,
 	removeTask,
 	setTaskLabel,
 	setTaskStatus,
@@ -162,8 +163,12 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 		} else {
 			set((state) => {
 				const h = pushHistory(history(state), snapshot(state));
+				const task = state.tasks.find((t) => t.id === taskId);
+				const wasCompleted = task?.status === "done";
+				const withAncestors = wasCompleted ? markUndone(state, taskId) : state;
+				const newGraph = setTaskStatus(withAncestors, taskId, status);
 				return {
-					...setTaskStatus(state, taskId, status),
+					...newGraph,
 					...h,
 					canUndo: h.past.length > 0,
 					canRedo: false,
@@ -180,7 +185,7 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 			set((state) => {
 				const h = pushHistory(history(state), snapshot(state));
 				return {
-					...setTaskStatus(state, taskId, "pending"),
+					...markUndone(state, taskId),
 					...h,
 					canUndo: h.past.length > 0,
 					canRedo: false,

@@ -13,6 +13,7 @@ import {
 	findSiblings,
 	isNodeHidden,
 	markDone,
+	markUndone,
 	removeTask,
 	setTaskLabel,
 	setTaskStatus,
@@ -969,5 +970,111 @@ describe("taskDepth", () => {
 		};
 
 		expect(taskDepth(graph, grandchild.id)).toBe(2);
+	});
+});
+
+describe("markUndone", () => {
+	test("sets the task back to pending", () => {
+		const task = { ...createTask("Leaf"), status: "done" as const };
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			tasks: [task],
+		};
+
+		const result = markUndone(graph, task.id);
+
+		expect(result.tasks).toEqual([{ ...task, status: "pending" }]);
+	});
+
+	test("uncompletes a done parent when its child is uncompleted", () => {
+		const goal = { ...createTask("Goal"), status: "done" as const };
+		const child = { ...createTask("Child"), status: "done" as const };
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child],
+			dependencies: [{ from: goal.id, to: child.id }],
+		};
+
+		const result = markUndone(graph, child.id);
+
+		expect(result.tasks).toEqual([
+			{ ...goal, status: "pending" },
+			{ ...child, status: "pending" },
+		]);
+	});
+
+	test("recursively uncompletes all done ancestors", () => {
+		const goal = { ...createTask("Goal"), status: "done" as const };
+		const child = { ...createTask("Child"), status: "done" as const };
+		const grandchild = { ...createTask("Grandchild"), status: "done" as const };
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child, grandchild],
+			dependencies: [
+				{ from: goal.id, to: child.id },
+				{ from: child.id, to: grandchild.id },
+			],
+		};
+
+		const result = markUndone(graph, grandchild.id);
+
+		expect(result.tasks).toEqual([
+			{ ...goal, status: "pending" },
+			{ ...child, status: "pending" },
+			{ ...grandchild, status: "pending" },
+		]);
+	});
+
+	test("does not uncomplete a parent that is not done", () => {
+		const goal = createTask("Goal");
+		const child = { ...createTask("Child"), status: "done" as const };
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child],
+			dependencies: [{ from: goal.id, to: child.id }],
+		};
+
+		const result = markUndone(graph, child.id);
+
+		expect(result.tasks).toEqual([goal, { ...child, status: "pending" }]);
+	});
+
+	test("does not affect siblings", () => {
+		const goal = { ...createTask("Goal"), status: "done" as const };
+		const child1 = { ...createTask("Child 1"), status: "done" as const };
+		const child2 = { ...createTask("Child 2"), status: "done" as const };
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child1, child2],
+			dependencies: [
+				{ from: goal.id, to: child1.id },
+				{ from: goal.id, to: child2.id },
+			],
+		};
+
+		const result = markUndone(graph, child1.id);
+
+		expect(result.tasks).toEqual([
+			{ ...goal, status: "pending" },
+			{ ...child1, status: "pending" },
+			child2,
+		]);
+	});
+
+	test("does not mutate the original graph", () => {
+		const task = { ...createTask("Task"), status: "done" as const };
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			tasks: [task],
+		};
+
+		const result = markUndone(graph, task.id);
+
+		expect(graph.tasks[0].status).toBe("done");
+		expect(result).not.toBe(graph);
 	});
 });

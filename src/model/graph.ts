@@ -131,6 +131,29 @@ export function markDone(graph: MikadoGraph, taskId: TaskId) {
 	};
 }
 
+export function markUndone(graph: MikadoGraph, taskId: TaskId) {
+	const idsToUncomplete = collectDoneAncestors(graph, taskId);
+	idsToUncomplete.add(taskId);
+	return {
+		...graph,
+		tasks: graph.tasks.map((t) =>
+			idsToUncomplete.has(t.id) ? { ...t, status: "pending" as const } : t,
+		),
+	};
+}
+
+function collectDoneAncestors(graph: MikadoGraph, taskId: TaskId) {
+	const ids = new Set<TaskId>();
+	let current = findParent(graph, taskId);
+	while (current) {
+		const task = graph.tasks.find((t) => t.id === current);
+		if (task?.status !== "done") break;
+		ids.add(current);
+		current = findParent(graph, current);
+	}
+	return ids;
+}
+
 export function addDependency(
 	graph: MikadoGraph,
 	fromId: TaskId,
