@@ -37,7 +37,11 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 	}, [isEditing, data.label]);
 
 	function confirmEdit() {
-		setTaskLabel(data.taskId, draft || DEFAULT_LABEL);
+		if (!draft.trim()) {
+			cancelEdit();
+			return;
+		}
+		setTaskLabel(data.taskId, draft);
 		stopEditing();
 	}
 

@@ -70,7 +70,11 @@ function OutlineRowComponent({
 	const label = task.label || DEFAULT_LABEL;
 
 	function confirmEdit() {
-		setTaskLabel(taskId, draft || DEFAULT_LABEL);
+		if (!draft.trim()) {
+			cancelEdit();
+			return;
+		}
+		setTaskLabel(taskId, draft);
 		stopEditing();
 	}
 
