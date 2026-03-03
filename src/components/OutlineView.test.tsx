@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
-import type { TaskLabel } from "../model/graph";
+import { MAX_LABEL_LENGTH, type TaskLabel } from "../model/graph";
 import { useGraphStore } from "../store/graph-store";
 import { OutlineView } from "./OutlineView";
 
@@ -25,6 +25,14 @@ type ChildConfig = {
 	status?: "pending" | "done" | "parked";
 	children?: { label: string; status?: "pending" | "done" | "parked" }[];
 };
+
+function findTaskByLabel(label: string) {
+	const task = useGraphStore
+		.getState()
+		.tasks.find((t) => t.label === (label as TaskLabel));
+	if (!task) throw new Error(`Task "${label}" not found`);
+	return task;
+}
 
 function setupGraph(config: { goal: string; children?: ChildConfig[] }) {
 	const state = useGraphStore.getState();
@@ -187,5 +195,87 @@ describe("OutlineView", () => {
 		await user.click(collapseButton);
 
 		expect(screen.queryByText("Grandchild")).not.toBeInTheDocument();
+	});
+
+	describe("inline editing", () => {
+		it("shows textarea with current label when editing", () => {
+			setupGraph({
+				goal: "Main goal",
+				children: [{ label: "Edit me" }],
+			});
+			const task = findTaskByLabel("Edit me");
+			useGraphStore.setState({ editingNodeId: task.id });
+
+			render(<OutlineView />);
+
+			const textarea = screen.getByRole("textbox", { name: "Task label" });
+			expect(textarea).toBeInTheDocument();
+			expect(textarea).toHaveValue("Edit me");
+		});
+
+		it("Enter confirms the edit", async () => {
+			const user = userEvent.setup();
+			setupGraph({
+				goal: "Main goal",
+				children: [{ label: "Old label" }],
+			});
+			const task = findTaskByLabel("Old label");
+			useGraphStore.setState({
+				editingNodeId: task.id,
+				selectedNodeId: task.id,
+			});
+
+			render(<OutlineView />);
+
+			const textarea = screen.getByRole("textbox", { name: "Task label" });
+			await user.clear(textarea);
+			await user.type(textarea, "New label{Enter}");
+
+			const state = useGraphStore.getState();
+			expect(state.editingNodeId).toBeNull();
+			expect(state.tasks.find((t) => t.id === task.id)?.label).toBe(
+				"New label" as TaskLabel,
+			);
+		});
+
+		it("Escape cancels the edit", async () => {
+			const user = userEvent.setup();
+			setupGraph({
+				goal: "Main goal",
+				children: [{ label: "Keep me" }],
+			});
+			const task = findTaskByLabel("Keep me");
+			useGraphStore.setState({
+				editingNodeId: task.id,
+				selectedNodeId: task.id,
+			});
+
+			render(<OutlineView />);
+
+			const textarea = screen.getByRole("textbox", { name: "Task label" });
+			await user.clear(textarea);
+			await user.type(textarea, "Changed{Escape}");
+
+			const state = useGraphStore.getState();
+			expect(state.editingNodeId).toBeNull();
+			expect(state.tasks.find((t) => t.id === task.id)?.label).toBe(
+				"Keep me" as TaskLabel,
+			);
+		});
+
+		it("shows character counter with current/max length", () => {
+			setupGraph({
+				goal: "Main goal",
+				children: [{ label: "Count me" }],
+			});
+			const task = findTaskByLabel("Count me");
+			useGraphStore.setState({ editingNodeId: task.id });
+
+			render(<OutlineView />);
+
+			expect(
+				screen.getByText(`8/${String(MAX_LABEL_LENGTH)}`),
+			).toBeInTheDocument();
+		});
 	});
 });

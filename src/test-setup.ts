@@ -34,6 +34,11 @@ Object.assign(navigator, {
 	},
 });
 
+// Mock scrollIntoView (not available in jsdom)
+Element.prototype.scrollIntoView = () => {
+	// do nothing
+};
+
 // Mock ResizeObserver for ReactFlow
 global.ResizeObserver = class ResizeObserver {
 	observe() {

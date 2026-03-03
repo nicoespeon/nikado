@@ -1,3 +1,4 @@
+import { MobileActionBar } from "./components/MobileActionBar";
 import { OutlineView } from "./components/OutlineView";
 import { useGraphStore } from "./store/graph-store";
 
@@ -7,8 +8,9 @@ function MobileView() {
 	if (!goalId) return <MobileEmptyState />;
 
 	return (
-		<div className="h-full overflow-y-auto bg-white dark:bg-gray-900">
+		<div className="h-full overflow-y-auto bg-white dark:bg-gray-900 pb-20">
 			<OutlineView />
+			<MobileActionBar />
 		</div>
 	);
 }

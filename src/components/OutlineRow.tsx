@@ -1,8 +1,10 @@
-import { memo } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import {
+	MAX_LABEL_LENGTH,
 	createTaskLabel,
 	findChildren,
 	findLeafTasks,
+	findParent,
 	type MikadoGraph,
 	type TaskId,
 } from "../model/graph";
@@ -32,16 +34,72 @@ function OutlineRowComponent({
 	const isDone = task?.status === "done";
 	const isParked = task?.status === "parked";
 
+	const editingNodeId = useGraphStore((s) => s.editingNodeId);
+	const isEditing = editingNodeId === taskId;
+	const setTaskLabel = useGraphStore((s) => s.setTaskLabel);
+	const stopEditing = useGraphStore((s) => s.stopEditing);
+	const undo = useGraphStore((s) => s.undo);
 	const toggleDone = useGraphStore((s) => s.toggleDone);
 	const selectNode = useGraphStore((s) => s.selectNode);
 	const toggleCollapse = useGraphStore((s) => s.toggleCollapse);
+
+	const [draft, setDraft] = useState<string>(task?.label ?? DEFAULT_LABEL);
+	const textareaRef = useRef<HTMLTextAreaElement>(null);
+	const rowRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (!isEditing) return;
+
+		setDraft(task?.label ?? DEFAULT_LABEL);
+		const timer = setTimeout(() => {
+			textareaRef.current?.focus();
+			textareaRef.current?.select();
+		}, 0);
+		return () => {
+			clearTimeout(timer);
+		};
+	}, [isEditing, task?.label]);
+
+	useEffect(() => {
+		if (!isEditing) return;
+		rowRef.current?.scrollIntoView({ block: "center" });
+	}, [isEditing]);
 
 	if (!task) return null;
 
 	const label = task.label || DEFAULT_LABEL;
 
+	function confirmEdit() {
+		setTaskLabel(taskId, draft || DEFAULT_LABEL);
+		stopEditing();
+	}
+
+	function cancelEdit() {
+		if (!task?.label) {
+			const parentId = findParent(useGraphStore.getState(), taskId);
+			undo();
+			if (parentId) useGraphStore.getState().selectNode(parentId);
+			return;
+		}
+		setDraft(task.label);
+		stopEditing();
+	}
+
+	function handleKeyDown(e: React.KeyboardEvent) {
+		if (e.key === "Enter") {
+			e.preventDefault();
+			e.stopPropagation();
+			confirmEdit();
+		}
+		if (e.key === "Escape") {
+			e.stopPropagation();
+			cancelEdit();
+		}
+	}
+
 	return (
 		<div
+			ref={rowRef}
 			role="treeitem"
 			aria-level={depth + 1}
 			aria-selected={isSelected}
@@ -88,28 +146,51 @@ function OutlineRowComponent({
 				<span className="shrink-0 w-6" />
 			)}
 
-			<button
-				type="button"
-				aria-label={isDone ? "Mark undone" : "Mark done"}
-				aria-pressed={isDone}
-				onClick={(e) => {
-					e.stopPropagation();
-					toggleDone(taskId);
-				}}
-				className={`shrink-0 w-5 h-5 rounded border flex items-center justify-center text-xs ${
-					isDone
-						? "bg-green-500 border-green-600 dark:bg-green-600 dark:border-green-500 text-white"
-						: "border-gray-400 hover:border-gray-600 dark:border-gray-500 dark:hover:border-gray-400"
-				}`}
-			>
-				{isDone ? "\u2713" : ""}
-			</button>
+			{!isEditing && (
+				<button
+					type="button"
+					aria-label={isDone ? "Mark undone" : "Mark done"}
+					aria-pressed={isDone}
+					onClick={(e) => {
+						e.stopPropagation();
+						toggleDone(taskId);
+					}}
+					className={`shrink-0 w-5 h-5 rounded border flex items-center justify-center text-xs ${
+						isDone
+							? "bg-green-500 border-green-600 dark:bg-green-600 dark:border-green-500 text-white"
+							: "border-gray-400 hover:border-gray-600 dark:border-gray-500 dark:hover:border-gray-400"
+					}`}
+				>
+					{isDone ? "\u2713" : ""}
+				</button>
+			)}
 
-			<span
-				className={`${isGoal ? "text-lg font-semibold" : "text-sm"} ${isDone ? "line-through opacity-60" : ""}`}
-			>
-				{label}
-			</span>
+			{isEditing ? (
+				<div className="flex-1 min-w-0 relative">
+					<textarea
+						ref={textareaRef}
+						aria-label="Task label"
+						maxLength={MAX_LABEL_LENGTH}
+						rows={1}
+						className="w-full border border-blue-400 dark:border-blue-500 rounded px-2 py-1 bg-white dark:bg-gray-800 text-sm outline-none resize-none overflow-hidden"
+						value={draft}
+						onChange={(e) => {
+							setDraft(e.target.value);
+						}}
+						onKeyDown={handleKeyDown}
+						onBlur={confirmEdit}
+					/>
+					<span className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 block text-right">
+						{draft.length}/{MAX_LABEL_LENGTH}
+					</span>
+				</div>
+			) : (
+				<span
+					className={`${isGoal ? "text-lg font-semibold" : "text-sm"} ${isDone ? "line-through opacity-60" : ""}`}
+				>
+					{label}
+				</span>
+			)}
 		</div>
 	);
 }
