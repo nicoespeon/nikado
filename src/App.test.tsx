@@ -1003,4 +1003,65 @@ describe("App", () => {
 			writeText.mockRestore();
 		});
 	});
+
+	describe("mobile", () => {
+		function mockMobileMatchMedia() {
+			const originalMatchMedia = window.matchMedia;
+			Object.defineProperty(window, "matchMedia", {
+				value: (query: string) => ({
+					matches: query === "(max-width: 767px)",
+					media: query,
+					onchange: null,
+					addListener() {
+						// do nothing
+					},
+					removeListener() {
+						// do nothing
+					},
+					addEventListener() {
+						// do nothing
+					},
+					removeEventListener() {
+						// do nothing
+					},
+					dispatchEvent: () => false,
+				}),
+				writable: true,
+				configurable: true,
+			});
+			return () => {
+				Object.defineProperty(window, "matchMedia", {
+					value: originalMatchMedia,
+					writable: true,
+					configurable: true,
+				});
+			};
+		}
+
+		it("renders outline view instead of graph on mobile", () => {
+			const restore = mockMobileMatchMedia();
+
+			useGraphStore.getState().createGoal("Mobile goal");
+			render(<App />);
+
+			expect(screen.getByRole("tree")).toBeInTheDocument();
+			expect(screen.getByText("Mobile goal")).toBeInTheDocument();
+			expect(document.querySelector(".react-flow")).not.toBeInTheDocument();
+
+			restore();
+		});
+
+		it("shows create goal button on mobile empty state", () => {
+			const restore = mockMobileMatchMedia();
+
+			render(<App />);
+
+			expect(
+				screen.getByRole("button", { name: "Create goal" }),
+			).toBeInTheDocument();
+			expect(document.querySelector(".react-flow")).not.toBeInTheDocument();
+
+			restore();
+		});
+	});
 });

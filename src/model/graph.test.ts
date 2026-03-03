@@ -16,7 +16,9 @@ import {
 	removeTask,
 	setTaskLabel,
 	setTaskStatus,
+	taskDepth,
 	toMarkdown,
+	walkTree,
 	type MikadoGraph,
 	type TaskId,
 } from "./graph";
@@ -858,5 +860,114 @@ describe("isNodeHidden", () => {
 		expect(isNodeHidden(graph, grandchild2.id, collapsed)).toBe(false);
 		expect(isNodeHidden(graph, child1.id, collapsed)).toBe(false);
 		expect(isNodeHidden(graph, child2.id, collapsed)).toBe(false);
+	});
+});
+
+describe("walkTree", () => {
+	test("returns tasks in depth-first order", () => {
+		const goal = createTask("Goal");
+		const child1 = createTask("Child 1");
+		const child2 = createTask("Child 2");
+		const grandchild1 = createTask("Grandchild 1");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child1, child2, grandchild1],
+			dependencies: [
+				{ from: goal.id, to: child1.id },
+				{ from: goal.id, to: child2.id },
+				{ from: child1.id, to: grandchild1.id },
+			],
+		};
+
+		expect(walkTree(graph, goal.id)).toEqual([
+			goal.id,
+			child1.id,
+			grandchild1.id,
+			child2.id,
+		]);
+	});
+
+	test("skips children of collapsed nodes", () => {
+		const goal = createTask("Goal");
+		const child1 = createTask("Child 1");
+		const child2 = createTask("Child 2");
+		const grandchild1 = createTask("Grandchild 1");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child1, child2, grandchild1],
+			dependencies: [
+				{ from: goal.id, to: child1.id },
+				{ from: goal.id, to: child2.id },
+				{ from: child1.id, to: grandchild1.id },
+			],
+		};
+
+		expect(walkTree(graph, goal.id, new Set([child1.id]))).toEqual([
+			goal.id,
+			child1.id,
+			child2.id,
+		]);
+	});
+
+	test("returns empty array when goalId is null", () => {
+		const graph = emptyGraph();
+
+		expect(walkTree(graph, null)).toEqual([]);
+	});
+
+	test("returns only the goal when it has no children", () => {
+		const goal = createTask("Goal");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal],
+		};
+
+		expect(walkTree(graph, goal.id)).toEqual([goal.id]);
+	});
+});
+
+describe("taskDepth", () => {
+	test("returns 0 for the goal", () => {
+		const goal = createTask("Goal");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal],
+		};
+
+		expect(taskDepth(graph, goal.id)).toBe(0);
+	});
+
+	test("returns 1 for direct children of the goal", () => {
+		const goal = createTask("Goal");
+		const child = createTask("Child");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child],
+			dependencies: [{ from: goal.id, to: child.id }],
+		};
+
+		expect(taskDepth(graph, child.id)).toBe(1);
+	});
+
+	test("returns 2 for grandchildren", () => {
+		const goal = createTask("Goal");
+		const child = createTask("Child");
+		const grandchild = createTask("Grandchild");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child, grandchild],
+			dependencies: [
+				{ from: goal.id, to: child.id },
+				{ from: child.id, to: grandchild.id },
+			],
+		};
+
+		expect(taskDepth(graph, grandchild.id)).toBe(2);
 	});
 });

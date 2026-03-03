@@ -188,6 +188,35 @@ export function toMarkdown(graph: MikadoGraph) {
 	return walk(graph.goalId, 0);
 }
 
+export function walkTree(
+	graph: MikadoGraph,
+	goalId: TaskId | null,
+	collapsedNodes = new Set<TaskId>(),
+): TaskId[] {
+	if (!goalId) return [];
+
+	const result: TaskId[] = [];
+	function visit(taskId: TaskId) {
+		result.push(taskId);
+		if (collapsedNodes.has(taskId)) return;
+		for (const childId of findChildren(graph, taskId)) {
+			visit(childId);
+		}
+	}
+	visit(goalId);
+	return result;
+}
+
+export function taskDepth(graph: MikadoGraph, taskId: TaskId): number {
+	let depth = 0;
+	let current = findParent(graph, taskId);
+	while (current) {
+		depth++;
+		current = findParent(graph, current);
+	}
+	return depth;
+}
+
 export function isNodeHidden(
 	graph: MikadoGraph,
 	taskId: TaskId,
