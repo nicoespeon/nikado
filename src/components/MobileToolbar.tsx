@@ -43,6 +43,7 @@ function MobileToolbar() {
 			</div>
 			{helpOpen && (
 				<HelpMenu
+					variant="mobile"
 					onClose={() => {
 						setHelpOpen(false);
 					}}
