@@ -24,7 +24,7 @@ function MobileView() {
 		);
 
 	return (
-		<div className="h-full overflow-y-auto bg-white dark:bg-gray-900 pt-16 pb-20">
+		<div className="h-full overflow-y-auto bg-white dark:bg-gray-900 pt-13.25 pb-20">
 			<MobileToolbar />
 			<OutlineView />
 			<MobileActionBar />
