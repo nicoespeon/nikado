@@ -81,13 +81,13 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 		<div
 			data-status={data.status}
 			data-leaf={data.isLeaf}
-			className={`rounded-lg shadow-sm w-fit min-w-[80px] max-w-[300px] ${statusStyles(data.status, data.isGoal, data.isLeaf)} ${focusRing}`}
+			className={`rounded-lg shadow-sm w-fit min-w-20 max-w-75 ${statusStyles(data.status, data.isGoal, data.isLeaf)} ${focusRing}`}
 		>
 			{renderHandles(data.isGoal)}
 			{isEditing ? (
 				<div className="relative">
 					<span
-						className="invisible whitespace-pre-wrap break-words"
+						className="invisible whitespace-pre-wrap wrap-break-word"
 						aria-hidden="true"
 					>
 						{draft || " "}
@@ -96,7 +96,7 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 						ref={textareaRef}
 						aria-label="Task label"
 						maxLength={MAX_LABEL_LENGTH}
-						className="nodrag absolute inset-0 border-0 p-0 bg-transparent outline-none resize-none overflow-hidden whitespace-pre-wrap break-words"
+						className="nodrag absolute inset-0 border-0 p-0 bg-transparent outline-none resize-none overflow-hidden whitespace-pre-wrap wrap-break-word"
 						value={draft}
 						onChange={(e) => {
 							setDraft(e.target.value);
@@ -125,7 +125,7 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 					>
 						{isDone ? "\u2713" : ""}
 					</button>
-					<span className="break-words">{data.label || DEFAULT_LABEL}</span>
+					<span className="wrap-break-word">{data.label || DEFAULT_LABEL}</span>
 					{data.hasChildren && (
 						<CollapseButton
 							taskId={data.taskId}
@@ -136,7 +136,7 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 				</div>
 			)}
 			{isEditing && (
-				<span className="absolute -bottom-1 right-2 text-[7px] text-gray-400 dark:text-gray-500 pointer-events-none">
+				<span className="absolute right-2 bottom-px text-[7px] text-gray-400 dark:text-gray-500 pointer-events-none">
 					{draft.length}/{MAX_LABEL_LENGTH}
 				</span>
 			)}
