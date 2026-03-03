@@ -9,8 +9,38 @@ function MobileView() {
 
 	return (
 		<div className="h-full overflow-y-auto bg-white dark:bg-gray-900 pb-20">
+			<MobileHeader />
 			<OutlineView />
 			<MobileActionBar />
+		</div>
+	);
+}
+
+function MobileHeader() {
+	return (
+		<div className="flex items-center gap-1.5 px-3 py-2 border-b border-gray-100 dark:border-gray-800">
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="20"
+				height="20"
+				viewBox="0 0 24 24"
+				fill="none"
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+			>
+				<path d="M16 5h-3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h3" stroke="#0392cf" />
+				<path d="M8 12h4" stroke="#0392cf" />
+				<rect x="16" y="2" width="6" height="6" rx="1" stroke="#0392cf" />
+				<rect x="16" y="16" width="6" height="6" rx="1" stroke="#7bc043" />
+				<rect x="2" y="9" width="6" height="6" rx="1" stroke="#0392cf" />
+			</svg>
+			<span
+				className="text-lg text-[#0392cf]"
+				style={{ fontFamily: "'Patrick Hand', cursive" }}
+			>
+				Nika<span className="text-[#7bc043]">do</span>
+			</span>
 		</div>
 	);
 }
