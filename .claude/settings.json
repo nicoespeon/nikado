@@ -8,7 +8,9 @@
 			"Bash(pnpm update:*)",
 			"Bash(pnpm add:*)",
 			"Bash(npx tsc:*)",
-			"Bash(gh auth status:*)"
+			"Bash(gh auth status:*)",
+			"mcp__github-server__get_pull_request_files",
+			"mcp__github-server__get_pull_request_status"
 		]
 	}
 }
