@@ -51,6 +51,7 @@ const SHORTCUT_CATEGORIES: readonly ShortcutCategory[] = [
 			["c", "Copy as text"],
 			["x", "Export as image"],
 			["?", "Toggle help"],
+			["g", "Open GitHub repo"],
 		],
 	},
 ];
