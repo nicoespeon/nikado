@@ -1,9 +1,9 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { useGraphStore } from "../store/graph-store";
-import { resetLicenseStore } from "../store/license-store";
+import { resetLicenseStore, useLicenseStore } from "../store/license-store";
 import {
 	resetSavedGraphsStore,
 	useSavedGraphsStore,
@@ -42,6 +42,16 @@ function PanelHarness() {
 }
 
 describe("SavedGraphsPanel", () => {
+	beforeEach(() => {
+		useLicenseStore.setState({
+			license: {
+				status: "active",
+				licenseKey: "test-key",
+				validatedAt: Date.now(),
+			},
+		});
+	});
+
 	afterEach(() => {
 		cleanup();
 		resetGraphStore();

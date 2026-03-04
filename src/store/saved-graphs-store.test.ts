@@ -1,7 +1,9 @@
+import { waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import type { TaskId } from "../model/graph";
 import type { SavedGraph, SavedGraphId } from "../model/saved-graph";
 import { useGraphStore } from "./graph-store";
+import { resetLicenseStore, useLicenseStore } from "./license-store";
 import {
 	resetSavedGraphsStore,
 	useSavedGraphsStore,
@@ -40,6 +42,7 @@ describe("saved-graphs-store", () => {
 	afterEach(() => {
 		resetGraphStore();
 		resetSavedGraphsStore();
+		resetLicenseStore();
 		localStorage.clear();
 	});
 
@@ -122,6 +125,36 @@ describe("saved-graphs-store", () => {
 			useSavedGraphsStore.getState().saveCurrentGraph();
 
 			expect(useSavedGraphsStore.getState().graphs).toHaveLength(2);
+		});
+	});
+
+	describe("auto-save license gate", () => {
+		it("does not auto-save when license is inactive", async () => {
+			useGraphStore.getState().createGoal("Free user goal");
+
+			// Wait longer than the auto-save debounce (1000ms)
+			await new Promise((resolve) => setTimeout(resolve, 1500));
+
+			expect(useSavedGraphsStore.getState().graphs).toHaveLength(0);
+		});
+
+		it("auto-saves when license is active", async () => {
+			useLicenseStore.setState({
+				license: {
+					status: "active",
+					licenseKey: "test-key",
+					validatedAt: Date.now(),
+				},
+			});
+
+			useGraphStore.getState().createGoal("Pro user goal");
+
+			await waitFor(
+				() => {
+					expect(useSavedGraphsStore.getState().graphs).toHaveLength(1);
+				},
+				{ timeout: 2000 },
+			);
 		});
 	});
 });

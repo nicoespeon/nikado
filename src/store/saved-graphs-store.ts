@@ -3,6 +3,7 @@ import type { MikadoGraph, TaskId } from "../model/graph";
 import type { SavedGraph, SavedGraphId } from "../model/saved-graph";
 import { extractGraphData } from "../model/url";
 import { useGraphStore } from "./graph-store";
+import { useLicenseStore } from "./license-store";
 
 type SavedGraphsStore = {
 	graphs: SavedGraph[];
@@ -182,6 +183,8 @@ let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined;
 useGraphStore.subscribe((state) => {
 	clearTimeout(autoSaveTimeout);
 	autoSaveTimeout = setTimeout(() => {
+		if (useLicenseStore.getState().license.status !== "active") return;
+
 		const { activeGraphId } = useSavedGraphsStore.getState();
 		if (!activeGraphId && state.goalId) {
 			useSavedGraphsStore.getState().saveCurrentGraph();
