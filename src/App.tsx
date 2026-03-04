@@ -4,6 +4,7 @@ import { useIsMobile } from "./hooks/use-is-mobile";
 import { useUrlSync } from "./hooks/use-url-sync";
 import { MobileView } from "./MobileView";
 import { useGraphStore } from "./store/graph-store";
+import { useLicenseStore } from "./store/license-store";
 
 const MAX_TITLE_LENGTH = 50;
 
@@ -30,6 +31,11 @@ function useDocumentTitle() {
 function App() {
 	useDocumentTitle();
 	useUrlSync();
+
+	useEffect(() => {
+		void useLicenseStore.getState().revalidateIfNeeded();
+	}, []);
+
 	const isMobile = useIsMobile();
 	return isMobile ? <MobileView /> : <DesktopView />;
 }

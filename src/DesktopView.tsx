@@ -13,6 +13,7 @@ import { CopyMarkdownButton } from "./components/CopyMarkdownButton";
 import { exportGraphAsImage } from "./components/export-image";
 import { ExportButton } from "./components/ExportButton";
 import { HelpMenu } from "./components/HelpMenu";
+import { LicenseModal } from "./components/LicenseModal";
 import { TaskNode } from "./components/nodes/TaskNode";
 import { ResetButton } from "./components/ResetButton";
 import { ShareButton } from "./components/ShareButton";
@@ -28,6 +29,7 @@ import { copyUrl } from "./hooks/use-share";
 import { cycleTheme, useTheme } from "./hooks/use-theme";
 import { findChildren, findParent, type TaskId } from "./model/graph";
 import { useGraphStore } from "./store/graph-store";
+import { useLicenseStore } from "./store/license-store";
 import {
 	toReactFlowEdges,
 	toReactFlowNodes,
@@ -67,6 +69,8 @@ function DesktopView() {
 	const rawNodes = toReactFlowNodes(graph, nodeSizes, collapsedNodes);
 	const edges = toReactFlowEdges(graph, collapsedNodes);
 	const [helpOpen, setHelpOpen] = useState(false);
+	const [licenseOpen, setLicenseOpen] = useState(false);
+	const licenseStatus = useLicenseStore((s) => s.license.status);
 	const isEmpty = graph.goalId === null;
 	const selectedNodeId = graph.selectedNodeId;
 
@@ -131,6 +135,12 @@ function DesktopView() {
 				active instanceof HTMLTextAreaElement
 			)
 				return;
+
+			if (e.key === "Escape" && licenseOpen) {
+				e.preventDefault();
+				setLicenseOpen(false);
+				return;
+			}
 
 			if (e.key === "Escape" && helpOpen) {
 				e.preventDefault();
@@ -249,6 +259,12 @@ function DesktopView() {
 				return;
 			}
 
+			if (e.key === "p") {
+				e.preventDefault();
+				setLicenseOpen((prev) => !prev);
+				return;
+			}
+
 			if (e.key === "g") {
 				e.preventDefault();
 				window.open(
@@ -335,7 +351,7 @@ function DesktopView() {
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [selectedNodeId, helpOpen]);
+	}, [selectedNodeId, helpOpen, licenseOpen]);
 
 	function createGoalOnDoubleClick(event: React.MouseEvent) {
 		const isDoubleClick = event.detail === 2;
@@ -445,6 +461,21 @@ function DesktopView() {
 					<div className="flex gap-1">
 						<button
 							type="button"
+							aria-label="Nikado Pro (P)"
+							title="Nikado Pro (P)"
+							onClick={() => {
+								setLicenseOpen(true);
+							}}
+							className={`flex items-center justify-center h-9 px-3 rounded-full border shadow-sm text-xs font-semibold cursor-pointer ${
+								licenseStatus === "active"
+									? "bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-700 text-green-700 dark:text-green-400"
+									: "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+							}`}
+						>
+							Pro
+						</button>
+						<button
+							type="button"
 							aria-label="Help (?)"
 							title="Help (?)"
 							onClick={() => {
@@ -481,6 +512,14 @@ function DesktopView() {
 					onClose={() => {
 						setHelpOpen(false);
 					}}
+				/>
+			)}
+			{licenseOpen && (
+				<LicenseModal
+					onClose={() => {
+						setLicenseOpen(false);
+					}}
+					purchaseUrl="https://buy.polar.sh/polar_cl_81z5FFOHJWG3jKuOxSk9JLCGRkMaqKc1yOWuz1P4O2l"
 				/>
 			)}
 		</div>

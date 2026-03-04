@@ -1,6 +1,6 @@
-import { defineConfig } from "eslint/config";
 import eslint from "@eslint/js";
 import vitest from "@vitest/eslint-plugin";
+import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
