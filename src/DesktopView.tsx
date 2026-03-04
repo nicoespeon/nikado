@@ -14,6 +14,7 @@ import { exportGraphAsImage } from "./components/export-image";
 import { ExportButton } from "./components/ExportButton";
 import { HelpMenu } from "./components/HelpMenu";
 import { LicenseModal } from "./components/LicenseModal";
+import { SavedGraphsPanel } from "./components/SavedGraphsPanel";
 import { TaskNode } from "./components/nodes/TaskNode";
 import { ResetButton } from "./components/ResetButton";
 import { ShareButton } from "./components/ShareButton";
@@ -30,6 +31,7 @@ import { cycleTheme, useTheme } from "./hooks/use-theme";
 import { findChildren, findParent, type TaskId } from "./model/graph";
 import { useGraphStore } from "./store/graph-store";
 import { useLicenseStore } from "./store/license-store";
+import { useSavedGraphsStore } from "./store/saved-graphs-store";
 import {
 	toReactFlowEdges,
 	toReactFlowNodes,
@@ -70,6 +72,7 @@ function DesktopView() {
 	const edges = toReactFlowEdges(graph, collapsedNodes);
 	const [helpOpen, setHelpOpen] = useState(false);
 	const [licenseOpen, setLicenseOpen] = useState(false);
+	const [savedGraphsOpen, setSavedGraphsOpen] = useState(false);
 	const licenseStatus = useLicenseStore((s) => s.license.status);
 	const isEmpty = graph.goalId === null;
 	const selectedNodeId = graph.selectedNodeId;
@@ -135,6 +138,12 @@ function DesktopView() {
 				active instanceof HTMLTextAreaElement
 			)
 				return;
+
+			if (e.key === "Escape" && savedGraphsOpen) {
+				e.preventDefault();
+				setSavedGraphsOpen(false);
+				return;
+			}
 
 			if (e.key === "Escape" && licenseOpen) {
 				e.preventDefault();
@@ -265,6 +274,18 @@ function DesktopView() {
 				return;
 			}
 
+			if (e.key === "l" && licenseStatus === "active") {
+				e.preventDefault();
+				setSavedGraphsOpen((prev) => !prev);
+				return;
+			}
+
+			if (e.key === "n" && licenseStatus === "active") {
+				e.preventDefault();
+				useSavedGraphsStore.getState().newGraph();
+				return;
+			}
+
 			if (e.key === "g") {
 				e.preventDefault();
 				window.open(
@@ -351,7 +372,7 @@ function DesktopView() {
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [selectedNodeId, helpOpen, licenseOpen]);
+	}, [selectedNodeId, helpOpen, licenseOpen, savedGraphsOpen, licenseStatus]);
 
 	function createGoalOnDoubleClick(event: React.MouseEvent) {
 		const isDoubleClick = event.detail === 2;
@@ -439,6 +460,16 @@ function DesktopView() {
 					color={resolvedTheme === "dark" ? "#374151" : "#e5e7eb"}
 					gap={16}
 				/>
+				{licenseStatus === "active" && (
+					<Panel position="top-left">
+						<SavedGraphsPanel
+							expanded={savedGraphsOpen}
+							onToggle={() => {
+								setSavedGraphsOpen((prev) => !prev);
+							}}
+						/>
+					</Panel>
+				)}
 				<Panel position="top-right">
 					<div className="flex gap-1">
 						<UndoButton />

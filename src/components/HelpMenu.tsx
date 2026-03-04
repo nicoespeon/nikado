@@ -51,6 +51,8 @@ const SHORTCUT_CATEGORIES: readonly ShortcutCategory[] = [
 			["c", "Copy as text"],
 			["x", "Export as image"],
 			["p", "Nikado Pro"],
+			["l", "Saved graphs (Pro)"],
+			["n", "New graph (Pro)"],
 			["?", "Toggle help"],
 			["g", "Open GitHub repo"],
 		],
