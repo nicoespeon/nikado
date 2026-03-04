@@ -46,11 +46,12 @@ export function addSubTask(
 	label: string,
 ) {
 	const task = createTask(label);
-	return addDependency(
+	const withNewTask = addDependency(
 		{ ...graph, tasks: [...graph.tasks, task] },
 		parentId,
 		task.id,
 	);
+	return markUndone(withNewTask, parentId);
 }
 
 export function setTaskLabel(

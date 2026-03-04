@@ -166,6 +166,38 @@ describe("addSubTask", () => {
 		]);
 	});
 
+	test("marks a done parent as pending", () => {
+		const parent = createTask("Parent");
+		parent.status = "done";
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: parent.id,
+			tasks: [parent],
+		};
+
+		const result = addSubTask(graph, parent.id, "Child");
+
+		expect(result.tasks[0].status).toBe("pending");
+	});
+
+	test("marks done ancestors as pending when parent is done", () => {
+		const goal = createTask("Goal");
+		goal.status = "done";
+		const child = createTask("Child");
+		child.status = "done";
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child],
+			dependencies: [{ from: goal.id, to: child.id }],
+		};
+
+		const result = addSubTask(graph, child.id, "Grandchild");
+
+		expect(result.tasks[0].status).toBe("pending");
+		expect(result.tasks[1].status).toBe("pending");
+	});
+
 	test("does not mutate the original graph", () => {
 		const parent = createTask("Parent");
 		const graph: MikadoGraph = {
