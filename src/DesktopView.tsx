@@ -9,6 +9,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { GITHUB_URL, PURCHASE_URL } from "./config";
 import { CopyMarkdownButton } from "./components/CopyMarkdownButton";
 import { exportGraphAsImage } from "./components/export-image";
 import { ExportButton } from "./components/ExportButton";
@@ -288,11 +289,7 @@ function DesktopView() {
 
 			if (e.key === "g") {
 				e.preventDefault();
-				window.open(
-					"https://github.com/nicoespeon/nikado",
-					"_blank",
-					"noopener,noreferrer",
-				);
+				window.open(GITHUB_URL, "_blank", "noopener,noreferrer");
 				return;
 			}
 
@@ -517,7 +514,7 @@ function DesktopView() {
 							?
 						</button>
 						<a
-							href="https://github.com/nicoespeon/nikado"
+							href={GITHUB_URL}
 							target="_blank"
 							rel="noopener noreferrer"
 							aria-label="GitHub repository (G)"
@@ -550,7 +547,7 @@ function DesktopView() {
 					onClose={() => {
 						setLicenseOpen(false);
 					}}
-					purchaseUrl="https://buy.polar.sh/polar_cl_81z5FFOHJWG3jKuOxSk9JLCGRkMaqKc1yOWuz1P4O2l"
+					purchaseUrl={PURCHASE_URL}
 				/>
 			)}
 		</div>

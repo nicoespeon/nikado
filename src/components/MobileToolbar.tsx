@@ -3,7 +3,10 @@ import { copyMarkdown, useMarkdownCopied } from "../hooks/use-copy-markdown";
 import { copyUrl, useCopied } from "../hooks/use-share";
 import { cycleTheme, useTheme } from "../hooks/use-theme";
 import { useGraphStore } from "../store/graph-store";
+import { PURCHASE_URL } from "../config";
+import { useLicenseStore } from "../store/license-store";
 import { HelpMenu } from "./HelpMenu";
+import { LicenseModal } from "./LicenseModal";
 
 const ICON_SIZE = 20;
 const BUTTON_CLASS =
@@ -11,6 +14,7 @@ const BUTTON_CLASS =
 
 function MobileToolbar() {
 	const [helpOpen, setHelpOpen] = useState(false);
+	const [licenseOpen, setLicenseOpen] = useState(false);
 
 	return (
 		<>
@@ -25,6 +29,11 @@ function MobileToolbar() {
 						<MobileCopyMarkdownButton />
 						<MobileResetButton />
 						<MobileThemeToggle />
+						<MobileProButton
+							onOpen={() => {
+								setLicenseOpen(true);
+							}}
+						/>
 						<button
 							type="button"
 							aria-label="Help"
@@ -47,6 +56,14 @@ function MobileToolbar() {
 					onClose={() => {
 						setHelpOpen(false);
 					}}
+				/>
+			)}
+			{licenseOpen && (
+				<LicenseModal
+					onClose={() => {
+						setLicenseOpen(false);
+					}}
+					purchaseUrl={PURCHASE_URL}
 				/>
 			)}
 		</>
@@ -262,6 +279,36 @@ function MobileThemeToggle() {
 				{THEME_ICON[theme]}
 			</span>
 			<span className="text-[10px]">{THEME_DISPLAY[theme]}</span>
+		</button>
+	);
+}
+
+function MobileProButton({ onOpen }: { onOpen: () => void }) {
+	const licenseStatus = useLicenseStore((s) => s.license.status);
+
+	return (
+		<button
+			type="button"
+			aria-label="Nikado Pro"
+			onClick={onOpen}
+			className={`${BUTTON_CLASS} ${
+				licenseStatus === "active" ? "text-green-700 dark:text-green-400" : ""
+			}`}
+		>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width={ICON_SIZE}
+				height={ICON_SIZE}
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+			>
+				<path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+			</svg>
+			<span className="text-[10px]">Pro</span>
 		</button>
 	);
 }

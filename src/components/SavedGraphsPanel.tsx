@@ -183,7 +183,7 @@ function GraphItem({
 					e.stopPropagation();
 					useSavedGraphsStore.getState().deleteGraph(id);
 				}}
-				className="hidden group-hover:flex items-center justify-center w-4 h-4 rounded text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 cursor-pointer text-xs"
+				className="flex items-center justify-center w-4 h-4 rounded text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 cursor-pointer text-xs opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 active:opacity-100 [@media(hover:none)]:opacity-100"
 			>
 				&#x2715;
 			</button>
