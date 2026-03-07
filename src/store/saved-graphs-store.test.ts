@@ -1,6 +1,6 @@
 import { waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import type { TaskId } from "../model/graph";
+import type { TaskId, TaskLabel } from "../model/graph";
 import type { SavedGraph, SavedGraphId } from "../model/saved-graph";
 import { useGraphStore } from "./graph-store";
 import { resetLicenseStore, useLicenseStore } from "./license-store";
@@ -30,7 +30,7 @@ function makeSavedGraph(id: string, goalLabel: string): SavedGraph {
 		id: id as SavedGraphId,
 		graph: {
 			goalId,
-			tasks: [{ id: goalId, label: goalLabel, status: "to-do" }],
+			tasks: [{ id: goalId, label: goalLabel as TaskLabel, status: "pending" }],
 			dependencies: [],
 		},
 		collapsedNodes: [],
