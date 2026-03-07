@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { graphName, type SavedGraphId } from "../model/saved-graph";
+import { graphName, isGoalDone, type SavedGraphId } from "../model/saved-graph";
 import { useSavedGraphsStore } from "../store/saved-graphs-store";
 
 type SavedGraphsPanelProps = {
@@ -113,6 +113,7 @@ function SavedGraphsPanel({ expanded, onToggle }: SavedGraphsPanelProps) {
 						key={g.id}
 						id={g.id}
 						name={graphName(g)}
+						isDone={isGoalDone(g)}
 						isActive={g.id === activeGraphId}
 						isFocused={index === focusedIndex}
 						onSelect={onToggle}
@@ -138,6 +139,7 @@ function SavedGraphsPanel({ expanded, onToggle }: SavedGraphsPanelProps) {
 type GraphItemProps = {
 	id: SavedGraphId;
 	name: string;
+	isDone: boolean;
 	isActive: boolean;
 	isFocused: boolean;
 	onSelect: () => void;
@@ -146,6 +148,7 @@ type GraphItemProps = {
 function GraphItem({
 	id,
 	name,
+	isDone,
 	isActive,
 	isFocused,
 	onSelect,
@@ -175,6 +178,14 @@ function GraphItem({
 				onSelect();
 			}}
 		>
+			{isDone && (
+				<span
+					className="text-green-600 dark:text-green-400 text-xs shrink-0"
+					aria-label="Completed"
+				>
+					&#x2713;
+				</span>
+			)}
 			<span className="flex-1 text-xs truncate">{name}</span>
 			<button
 				type="button"

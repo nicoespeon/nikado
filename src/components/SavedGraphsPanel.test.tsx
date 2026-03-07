@@ -252,6 +252,53 @@ describe("SavedGraphsPanel", () => {
 		expect(goal?.label).toBe("Graph B");
 	});
 
+	it("shows a completed indicator when the goal is done", async () => {
+		const user = userEvent.setup();
+		render(<PanelHarness />);
+
+		createGoal("Finished graph");
+		await waitFor(
+			() => {
+				expect(useSavedGraphsStore.getState().graphs).toHaveLength(1);
+			},
+			{ timeout: 2000 },
+		);
+
+		const goalId = useGraphStore.getState().goalId;
+		if (!goalId) throw new Error("Expected goalId to be set");
+		useGraphStore.getState().toggleDone(goalId);
+
+		await waitFor(
+			() => {
+				const saved = useSavedGraphsStore.getState().graphs[0];
+				const goal = saved.graph.tasks.find((t) => t.id === saved.graph.goalId);
+				expect(goal?.status).toBe("done");
+			},
+			{ timeout: 2000 },
+		);
+
+		await user.click(screen.getByRole("button", { name: "Saved graphs (L)" }));
+
+		expect(screen.getByLabelText("Completed")).toBeInTheDocument();
+	});
+
+	it("does not show a completed indicator for pending graphs", async () => {
+		const user = userEvent.setup();
+		render(<PanelHarness />);
+
+		createGoal("In progress");
+		await waitFor(
+			() => {
+				expect(useSavedGraphsStore.getState().graphs).toHaveLength(1);
+			},
+			{ timeout: 2000 },
+		);
+
+		await user.click(screen.getByRole("button", { name: "Saved graphs (L)" }));
+
+		expect(screen.queryByLabelText("Completed")).not.toBeInTheDocument();
+	});
+
 	it("deletes a graph via Backspace key", async () => {
 		const user = userEvent.setup();
 		render(<PanelHarness />);
