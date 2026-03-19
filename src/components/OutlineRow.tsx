@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
 	MAX_LABEL_LENGTH,
 	createTaskLabel,
@@ -15,15 +15,19 @@ type OutlineRowProps = {
 	depth: number;
 	isGoal: boolean;
 	isSelected: boolean;
+	onLongPress?: (taskId: TaskId, y: number) => void;
 };
 
 const DEFAULT_LABEL = createTaskLabel("Do something great");
+
+const LONG_PRESS_MS = 500;
 
 function OutlineRowComponent({
 	taskId,
 	depth,
 	isGoal,
 	isSelected,
+	onLongPress,
 }: OutlineRowProps) {
 	const task = useGraphStore((s) => s.tasks.find((t) => t.id === taskId));
 	const graph = useGraphStore();
@@ -64,6 +68,38 @@ function OutlineRowComponent({
 		if (!isEditing) return;
 		rowRef.current?.scrollIntoView({ block: "center" });
 	}, [isEditing]);
+
+	const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	const clearLongPress = useCallback(() => {
+		if (longPressTimer.current) {
+			clearTimeout(longPressTimer.current);
+			longPressTimer.current = null;
+		}
+	}, []);
+
+	const handleTouchStart = useCallback(
+		(e: React.TouchEvent) => {
+			if (!onLongPress) return;
+			const touch = e.touches[0];
+			const y = touch.clientY;
+			longPressTimer.current = setTimeout(() => {
+				longPressTimer.current = null;
+				window.getSelection()?.removeAllRanges();
+				onLongPress(taskId, y);
+			}, LONG_PRESS_MS);
+		},
+		[onLongPress, taskId],
+	);
+
+	const handleContextMenu = useCallback(
+		(e: React.MouseEvent) => {
+			if (!onLongPress) return;
+			e.preventDefault();
+			onLongPress(taskId, e.clientY);
+		},
+		[onLongPress, taskId],
+	);
 
 	if (!task) return null;
 
@@ -112,6 +148,10 @@ function OutlineRowComponent({
 			onClick={() => {
 				selectNode(taskId);
 			}}
+			onTouchStart={handleTouchStart}
+			onTouchEnd={clearLongPress}
+			onTouchMove={clearLongPress}
+			onContextMenu={handleContextMenu}
 		>
 			{hasChildren ? (
 				<button

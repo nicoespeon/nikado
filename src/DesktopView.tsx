@@ -89,7 +89,27 @@ function DesktopView() {
 
 	const onPaneClick = useCallback(() => {
 		useGraphStore.getState().selectNode(null);
+		setNodeContextMenu(null);
 	}, []);
+
+	const [nodeContextMenu, setNodeContextMenu] = useState<{
+		taskId: TaskId;
+		x: number;
+		y: number;
+	} | null>(null);
+
+	const onNodeContextMenu = useCallback(
+		(event: React.MouseEvent, node: Node) => {
+			event.preventDefault();
+			useGraphStore.getState().selectNode(node.id as TaskId);
+			setNodeContextMenu({
+				taskId: node.id as TaskId,
+				x: event.clientX,
+				y: event.clientY,
+			});
+		},
+		[],
+	);
 
 	useEffect(() => {
 		if (editingNodeId) return;
@@ -140,6 +160,12 @@ function DesktopView() {
 			)
 				return;
 
+			if (e.key === "Escape" && nodeContextMenu) {
+				e.preventDefault();
+				setNodeContextMenu(null);
+				return;
+			}
+
 			if (e.key === "Escape" && savedGraphsOpen) {
 				e.preventDefault();
 				setSavedGraphsOpen(false);
@@ -183,6 +209,18 @@ function DesktopView() {
 			if (e.key === "z" && (e.metaKey || e.ctrlKey) && e.shiftKey) {
 				e.preventDefault();
 				state.redo();
+				return;
+			}
+
+			if (e.altKey && e.key === "ArrowUp" && selectedNodeId) {
+				e.preventDefault();
+				state.moveSiblingUp(selectedNodeId);
+				return;
+			}
+
+			if (e.altKey && e.key === "ArrowDown" && selectedNodeId) {
+				e.preventDefault();
+				state.moveSiblingDown(selectedNodeId);
 				return;
 			}
 
@@ -369,7 +407,14 @@ function DesktopView() {
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [selectedNodeId, helpOpen, licenseOpen, savedGraphsOpen, licenseStatus]);
+	}, [
+		selectedNodeId,
+		helpOpen,
+		licenseOpen,
+		savedGraphsOpen,
+		licenseStatus,
+		nodeContextMenu,
+	]);
 
 	function createGoalOnDoubleClick(event: React.MouseEvent) {
 		const isDoubleClick = event.detail === 2;
@@ -436,6 +481,7 @@ function DesktopView() {
 				onNodesChange={onNodesChange}
 				onNodeClick={onNodeClick}
 				onPaneClick={onPaneClick}
+				onNodeContextMenu={onNodeContextMenu}
 				onInit={(instance) => {
 					reactFlowRef.current = instance;
 					// Corrective fit after nodes finish rendering with final dimensions.
@@ -549,6 +595,102 @@ function DesktopView() {
 					}}
 					purchaseUrl={PURCHASE_URL}
 				/>
+			)}
+			{nodeContextMenu && (
+				<NodeContextMenu
+					taskId={nodeContextMenu.taskId}
+					x={nodeContextMenu.x}
+					y={nodeContextMenu.y}
+					onClose={() => {
+						setNodeContextMenu(null);
+					}}
+				/>
+			)}
+		</div>
+	);
+}
+
+type NodeContextMenuProps = {
+	taskId: TaskId;
+	x: number;
+	y: number;
+	onClose: () => void;
+};
+
+function NodeContextMenu({ taskId, x, y, onClose }: NodeContextMenuProps) {
+	const menuRef = useRef<HTMLDivElement>(null);
+	const graph = useGraphStore();
+	const parentId = findParent(graph, taskId);
+	const isGoal = taskId === graph.goalId;
+
+	const siblings = parentId ? findChildren(graph, parentId) : [];
+	const siblingIndex = siblings.indexOf(taskId);
+	const canMoveUp = !isGoal && siblings.length > 1 && siblingIndex > 0;
+	const canMoveDown =
+		!isGoal && siblings.length > 1 && siblingIndex < siblings.length - 1;
+
+	const hasAnyAction = canMoveUp || canMoveDown;
+
+	useEffect(() => {
+		if (!hasAnyAction) {
+			onClose();
+			return;
+		}
+
+		function handleClickOutside(e: MouseEvent) {
+			if (
+				menuRef.current &&
+				!menuRef.current.contains(e.target as HTMLElement)
+			) {
+				onClose();
+			}
+		}
+		function handleKeyDown(e: KeyboardEvent) {
+			if (e.key === "Escape") onClose();
+		}
+		document.addEventListener("mousedown", handleClickOutside);
+		document.addEventListener("keydown", handleKeyDown);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+			document.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [onClose, hasAnyAction]);
+
+	if (!hasAnyAction) return null;
+
+	return (
+		<div
+			ref={menuRef}
+			role="menu"
+			aria-label="Task actions"
+			className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 min-w-40 select-none"
+			style={{ left: `${String(x)}px`, top: `${String(y)}px` }}
+		>
+			{canMoveUp && (
+				<button
+					type="button"
+					role="menuitem"
+					className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+					onClick={() => {
+						graph.moveSiblingUp(taskId);
+						onClose();
+					}}
+				>
+					Move up
+				</button>
+			)}
+			{canMoveDown && (
+				<button
+					type="button"
+					role="menuitem"
+					className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+					onClick={() => {
+						graph.moveSiblingDown(taskId);
+						onClose();
+					}}
+				>
+					Move down
+				</button>
 			)}
 		</div>
 	);

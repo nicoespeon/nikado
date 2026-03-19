@@ -197,6 +197,101 @@ describe("OutlineView", () => {
 		expect(screen.queryByText("Grandchild")).not.toBeInTheDocument();
 	});
 
+	describe("long-press context menu", () => {
+		it("shows Move up and Move down on right-click", async () => {
+			const user = userEvent.setup();
+			setupGraph({
+				goal: "Goal",
+				children: [{ label: "A" }, { label: "B" }, { label: "C" }],
+			});
+
+			render(<OutlineView />);
+
+			const row = screen.getByText("B");
+			await user.pointer({ keys: "[MouseRight]", target: row });
+
+			expect(
+				screen.getByRole("menuitem", { name: "Move up" }),
+			).toBeInTheDocument();
+			expect(
+				screen.getByRole("menuitem", { name: "Move down" }),
+			).toBeInTheDocument();
+		});
+
+		it("Move up reorders the task", async () => {
+			const user = userEvent.setup();
+			setupGraph({
+				goal: "Goal",
+				children: [{ label: "A" }, { label: "B" }],
+			});
+
+			render(<OutlineView />);
+
+			const row = screen.getByText("B");
+			await user.pointer({ keys: "[MouseRight]", target: row });
+
+			await user.click(screen.getByRole("menuitem", { name: "Move up" }));
+
+			const state = useGraphStore.getState();
+			const goalChildren = state.dependencies
+				.filter((d) => d.from === state.goalId)
+				.map((d) => state.tasks.find((t) => t.id === d.to)?.label);
+			expect(goalChildren).toEqual(["B", "A"]);
+		});
+
+		it("hides Move up for first sibling", async () => {
+			const user = userEvent.setup();
+			setupGraph({
+				goal: "Goal",
+				children: [{ label: "A" }, { label: "B" }],
+			});
+
+			render(<OutlineView />);
+
+			const row = screen.getByText("A");
+			await user.pointer({ keys: "[MouseRight]", target: row });
+
+			expect(
+				screen.queryByRole("menuitem", { name: "Move up" }),
+			).not.toBeInTheDocument();
+			expect(
+				screen.getByRole("menuitem", { name: "Move down" }),
+			).toBeInTheDocument();
+		});
+
+		it("hides Move down for last sibling", async () => {
+			const user = userEvent.setup();
+			setupGraph({
+				goal: "Goal",
+				children: [{ label: "A" }, { label: "B" }],
+			});
+
+			render(<OutlineView />);
+
+			const row = screen.getByText("B");
+			await user.pointer({ keys: "[MouseRight]", target: row });
+
+			expect(
+				screen.getByRole("menuitem", { name: "Move up" }),
+			).toBeInTheDocument();
+			expect(
+				screen.queryByRole("menuitem", { name: "Move down" }),
+			).not.toBeInTheDocument();
+		});
+
+		it("does not show context menu for the goal", async () => {
+			const user = userEvent.setup();
+			setupGraph({ goal: "Goal" });
+
+			render(<OutlineView />);
+
+			const row = screen.getByText("Goal");
+			await user.pointer({ keys: "[MouseRight]", target: row });
+
+			expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+		});
+	});
+
 	describe("inline editing", () => {
 		it("shows textarea with current label when editing", () => {
 			setupGraph({

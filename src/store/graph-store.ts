@@ -8,6 +8,8 @@ import {
 	findParent,
 	markDone,
 	markUndone,
+	moveSiblingDown as moveSiblingDownInGraph,
+	moveSiblingUp as moveSiblingUpInGraph,
 	removeTask,
 	setTaskLabel,
 	setTaskStatus,
@@ -35,6 +37,8 @@ type GraphStore = MikadoGraph &
 		removeTask: (taskId: TaskId) => void;
 		setTaskStatus: (taskId: TaskId, status: TaskStatus) => void;
 		toggleDone: (taskId: TaskId) => void;
+		moveSiblingUp: (taskId: TaskId) => void;
+		moveSiblingDown: (taskId: TaskId) => void;
 		startEditing: (taskId: TaskId) => void;
 		editTask: (taskId: TaskId) => void;
 		stopEditing: () => void;
@@ -202,6 +206,34 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 				};
 			});
 		}
+	},
+
+	moveSiblingUp(taskId) {
+		set((state) => {
+			const newGraph = moveSiblingUpInGraph(state, taskId);
+			if (newGraph === state) return {};
+			const h = pushHistory(history(state), snapshot(state));
+			return {
+				...newGraph,
+				...h,
+				canUndo: h.past.length > 0,
+				canRedo: false,
+			};
+		});
+	},
+
+	moveSiblingDown(taskId) {
+		set((state) => {
+			const newGraph = moveSiblingDownInGraph(state, taskId);
+			if (newGraph === state) return {};
+			const h = pushHistory(history(state), snapshot(state));
+			return {
+				...newGraph,
+				...h,
+				canUndo: h.past.length > 0,
+				canRedo: false,
+			};
+		});
 	},
 
 	startEditing(taskId) {

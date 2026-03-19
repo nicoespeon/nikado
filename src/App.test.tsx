@@ -825,6 +825,124 @@ describe("App", () => {
 		});
 	});
 
+	describe("reorder siblings", () => {
+		it("moves a sibling up with Alt+ArrowUp", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("A{Enter}");
+			await waitFor(() => expect(screen.getByText("A")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("B{Enter}");
+			await waitFor(() => expect(screen.getByText("B")).toBeInTheDocument());
+
+			const childBId = useGraphStore.getState().tasks[2].id;
+			selectNode(childBId);
+
+			await user.keyboard("{Alt>}{ArrowUp}{/Alt}");
+
+			const state = useGraphStore.getState();
+			const goalChildren = state.dependencies
+				.filter((d) => d.from === state.goalId)
+				.map((d) => d.to);
+			expect(goalChildren).toEqual([childBId, state.tasks[1].id]);
+			expect(state.selectedNodeId).toBe(childBId);
+		});
+
+		it("moves a sibling down with Alt+ArrowDown", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("A{Enter}");
+			await waitFor(() => expect(screen.getByText("A")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("B{Enter}");
+			await waitFor(() => expect(screen.getByText("B")).toBeInTheDocument());
+
+			const childAId = useGraphStore.getState().tasks[1].id;
+			selectNode(childAId);
+
+			await user.keyboard("{Alt>}{ArrowDown}{/Alt}");
+
+			const state = useGraphStore.getState();
+			const goalChildren = state.dependencies
+				.filter((d) => d.from === state.goalId)
+				.map((d) => d.to);
+			expect(goalChildren).toEqual([state.tasks[2].id, childAId]);
+			expect(state.selectedNodeId).toBe(childAId);
+		});
+
+		it("does nothing when Alt+ArrowUp on first sibling", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("A{Enter}");
+			await waitFor(() => expect(screen.getByText("A")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("B{Enter}");
+			await waitFor(() => expect(screen.getByText("B")).toBeInTheDocument());
+
+			const childAId = useGraphStore.getState().tasks[1].id;
+			const depsBefore = useGraphStore.getState().dependencies;
+			selectNode(childAId);
+
+			await user.keyboard("{Alt>}{ArrowUp}{/Alt}");
+
+			expect(useGraphStore.getState().dependencies).toEqual(depsBefore);
+		});
+	});
+
 	describe("URL state persistence", () => {
 		it("updates URL hash after creating a goal", async () => {
 			const user = userEvent.setup();

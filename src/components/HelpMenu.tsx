@@ -21,6 +21,7 @@ const SHORTCUT_CATEGORIES: readonly ShortcutCategory[] = [
 			["Escape", "Cancel editing"],
 			["d", "Toggle done"],
 			["Delete / Backspace", "Delete task"],
+			["Alt + \u2191 / \u2193", "Reorder sibling"],
 		],
 	},
 	{
@@ -165,6 +166,9 @@ function MobileContent() {
 				Interesting Actions
 			</h3>
 			<ul className="text-base space-y-3 text-gray-700 dark:text-gray-300 mb-6">
+				<li>
+					<strong>Long-press</strong> a task for more actions (reorder, etc.)
+				</li>
 				<li>
 					<strong>Share</strong> copies the URL to your clipboard, so others can
 					see your graph

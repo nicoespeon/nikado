@@ -254,6 +254,37 @@ export function isNodeHidden(
 	return false;
 }
 
+export function moveSiblingUp(graph: MikadoGraph, taskId: TaskId) {
+	return moveSibling(graph, taskId, -1);
+}
+
+export function moveSiblingDown(graph: MikadoGraph, taskId: TaskId) {
+	return moveSibling(graph, taskId, 1);
+}
+
+function moveSibling(graph: MikadoGraph, taskId: TaskId, offset: -1 | 1) {
+	const parentId = findParent(graph, taskId);
+	if (!parentId) return graph;
+
+	const siblingDeps = graph.dependencies
+		.map((d, i) => ({ dep: d, index: i }))
+		.filter(({ dep }) => dep.from === parentId);
+
+	if (siblingDeps.length <= 1) return graph;
+
+	const pos = siblingDeps.findIndex(({ dep }) => dep.to === taskId);
+	const swapPos = pos + offset;
+	if (swapPos < 0 || swapPos >= siblingDeps.length) return graph;
+
+	const deps = [...graph.dependencies];
+	const aIndex = siblingDeps[pos].index;
+	const bIndex = siblingDeps[swapPos].index;
+	deps[aIndex] = graph.dependencies[bIndex];
+	deps[bIndex] = graph.dependencies[aIndex];
+
+	return { ...graph, dependencies: deps };
+}
+
 function collectDescendants(graph: MikadoGraph, taskId: TaskId) {
 	const ids = new Set<TaskId>([taskId]);
 	const queue = findChildren(graph, taskId);

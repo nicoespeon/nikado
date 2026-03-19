@@ -14,6 +14,8 @@ import {
 	isNodeHidden,
 	markDone,
 	markUndone,
+	moveSiblingDown,
+	moveSiblingUp,
 	removeTask,
 	setTaskLabel,
 	setTaskStatus,
@@ -1107,6 +1109,216 @@ describe("markUndone", () => {
 		const result = markUndone(graph, task.id);
 
 		expect(graph.tasks[0].status).toBe("done");
+		expect(result).not.toBe(graph);
+	});
+});
+
+describe("moveSiblingUp", () => {
+	test("swaps task with previous sibling", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const b = createTask("B");
+		const c = createTask("C");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b, c],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+				{ from: goal.id, to: c.id },
+			],
+		};
+
+		const result = moveSiblingUp(graph, b.id);
+
+		expect(findChildren(result, goal.id)).toEqual([b.id, a.id, c.id]);
+	});
+
+	test("returns graph unchanged when task is first sibling", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const b = createTask("B");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+			],
+		};
+
+		const result = moveSiblingUp(graph, a.id);
+
+		expect(result).toBe(graph);
+	});
+
+	test("returns graph unchanged when task is the goal", () => {
+		const goal = createTask("Goal");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal],
+		};
+
+		const result = moveSiblingUp(graph, goal.id);
+
+		expect(result).toBe(graph);
+	});
+
+	test("returns graph unchanged when task is the only child", () => {
+		const goal = createTask("Goal");
+		const only = createTask("Only");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, only],
+			dependencies: [{ from: goal.id, to: only.id }],
+		};
+
+		const result = moveSiblingUp(graph, only.id);
+
+		expect(result).toBe(graph);
+	});
+
+	test("does not affect dependencies of other parents", () => {
+		const goal = createTask("Goal");
+		const parent1 = createTask("Parent1");
+		const a = createTask("A");
+		const b = createTask("B");
+		const x = createTask("X");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, parent1, a, b, x],
+			dependencies: [
+				{ from: goal.id, to: parent1.id },
+				{ from: goal.id, to: x.id },
+				{ from: parent1.id, to: a.id },
+				{ from: parent1.id, to: b.id },
+			],
+		};
+
+		const result = moveSiblingUp(graph, b.id);
+
+		expect(findChildren(result, parent1.id)).toEqual([b.id, a.id]);
+		expect(findChildren(result, goal.id)).toEqual([parent1.id, x.id]);
+	});
+
+	test("does not mutate the original graph", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const b = createTask("B");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+			],
+		};
+
+		const result = moveSiblingUp(graph, b.id);
+
+		expect(graph.dependencies).toEqual([
+			{ from: goal.id, to: a.id },
+			{ from: goal.id, to: b.id },
+		]);
+		expect(result).not.toBe(graph);
+	});
+});
+
+describe("moveSiblingDown", () => {
+	test("swaps task with next sibling", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const b = createTask("B");
+		const c = createTask("C");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b, c],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+				{ from: goal.id, to: c.id },
+			],
+		};
+
+		const result = moveSiblingDown(graph, b.id);
+
+		expect(findChildren(result, goal.id)).toEqual([a.id, c.id, b.id]);
+	});
+
+	test("returns graph unchanged when task is last sibling", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const b = createTask("B");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+			],
+		};
+
+		const result = moveSiblingDown(graph, b.id);
+
+		expect(result).toBe(graph);
+	});
+
+	test("returns graph unchanged when task is the goal", () => {
+		const goal = createTask("Goal");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal],
+		};
+
+		const result = moveSiblingDown(graph, goal.id);
+
+		expect(result).toBe(graph);
+	});
+
+	test("returns graph unchanged when task is the only child", () => {
+		const goal = createTask("Goal");
+		const only = createTask("Only");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, only],
+			dependencies: [{ from: goal.id, to: only.id }],
+		};
+
+		const result = moveSiblingDown(graph, only.id);
+
+		expect(result).toBe(graph);
+	});
+
+	test("does not mutate the original graph", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const b = createTask("B");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+			],
+		};
+
+		const result = moveSiblingDown(graph, a.id);
+
+		expect(graph.dependencies).toEqual([
+			{ from: goal.id, to: a.id },
+			{ from: goal.id, to: b.id },
+		]);
 		expect(result).not.toBe(graph);
 	});
 });
