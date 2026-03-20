@@ -279,6 +279,59 @@ describe("OutlineView", () => {
 			).not.toBeInTheDocument();
 		});
 
+		it("shows Insert parent for non-goal tasks", async () => {
+			const user = userEvent.setup();
+			setupGraph({
+				goal: "Goal",
+				children: [{ label: "Child" }],
+			});
+
+			render(<OutlineView />);
+
+			const row = screen.getByText("Child");
+			await user.pointer({ keys: "[MouseRight]", target: row });
+
+			expect(
+				screen.getByRole("menuitem", { name: "Insert parent" }),
+			).toBeInTheDocument();
+		});
+
+		it("Insert parent creates the intermediate task", async () => {
+			const user = userEvent.setup();
+			setupGraph({
+				goal: "Goal",
+				children: [{ label: "Child" }],
+			});
+
+			render(<OutlineView />);
+
+			const row = screen.getByText("Child");
+			await user.pointer({ keys: "[MouseRight]", target: row });
+
+			await user.click(screen.getByRole("menuitem", { name: "Insert parent" }));
+
+			const state = useGraphStore.getState();
+			expect(state.tasks).toHaveLength(3);
+			expect(state.editingNodeId).not.toBeNull();
+		});
+
+		it("hides Insert parent for the goal", async () => {
+			const user = userEvent.setup();
+			setupGraph({
+				goal: "Goal",
+				children: [{ label: "A" }, { label: "B" }],
+			});
+
+			render(<OutlineView />);
+
+			const row = screen.getByText("Goal");
+			await user.pointer({ keys: "[MouseRight]", target: row });
+
+			expect(
+				screen.queryByRole("menuitem", { name: "Insert parent" }),
+			).not.toBeInTheDocument();
+		});
+
 		it("does not show context menu for the goal", async () => {
 			const user = userEvent.setup();
 			setupGraph({ goal: "Goal" });

@@ -254,6 +254,31 @@ export function isNodeHidden(
 	return false;
 }
 
+export function insertParent(
+	graph: MikadoGraph,
+	taskId: TaskId,
+	label: string,
+): { graph: MikadoGraph; newTaskId: TaskId } {
+	const parentId = findParent(graph, taskId);
+	if (!parentId) return { graph, newTaskId: taskId };
+
+	const task = createTask(label);
+	const dependencies = graph.dependencies.map((d) =>
+		d.from === parentId && d.to === taskId
+			? { from: parentId, to: task.id }
+			: d,
+	);
+
+	return {
+		graph: {
+			...graph,
+			tasks: [...graph.tasks, task],
+			dependencies: [...dependencies, { from: task.id, to: taskId }],
+		},
+		newTaskId: task.id,
+	};
+}
+
 export function moveSiblingUp(graph: MikadoGraph, taskId: TaskId) {
 	return moveSibling(graph, taskId, -1);
 }

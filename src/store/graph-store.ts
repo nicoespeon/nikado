@@ -6,6 +6,7 @@ import {
 	createTask,
 	findChildren,
 	findParent,
+	insertParent as insertParentInGraph,
 	markDone,
 	markUndone,
 	moveSiblingDown as moveSiblingDownInGraph,
@@ -32,6 +33,7 @@ type GraphStore = MikadoGraph &
 		createTask: (label: string) => TaskId;
 		addSubTask: (parentId: TaskId, label: string) => TaskId;
 		addSibling: (taskId: TaskId, label: string) => TaskId | null;
+		insertParent: (taskId: TaskId, label: string) => TaskId;
 		setTaskLabel: (taskId: TaskId, label: string) => void;
 		addDependency: (fromId: TaskId, toId: TaskId) => void;
 		removeTask: (taskId: TaskId) => void;
@@ -124,6 +126,23 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 		if (!parentId) return null;
 
 		return get().addSubTask(parentId, label);
+	},
+
+	insertParent(taskId, label) {
+		const current = get();
+		const h = pushHistory(history(current), snapshot(current));
+		const { graph: newGraph, newTaskId } = insertParentInGraph(
+			current,
+			taskId,
+			label,
+		);
+		set(() => ({
+			...newGraph,
+			...h,
+			canUndo: h.past.length > 0,
+			canRedo: false,
+		}));
+		return newTaskId;
 	},
 
 	setTaskLabel(taskId, label) {

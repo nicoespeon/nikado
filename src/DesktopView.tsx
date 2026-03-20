@@ -257,6 +257,13 @@ function DesktopView() {
 				return;
 			}
 
+			if (e.key === "Tab" && e.shiftKey && selectedNodeId) {
+				e.preventDefault();
+				const newTaskId = state.insertParent(selectedNodeId, "");
+				if (newTaskId !== selectedNodeId) state.startEditing(newTaskId);
+				return;
+			}
+
 			if (e.key === "Tab" && selectedNodeId) {
 				e.preventDefault();
 				const newTaskId = state.addSubTask(selectedNodeId, "");
@@ -629,7 +636,8 @@ function NodeContextMenu({ taskId, x, y, onClose }: NodeContextMenuProps) {
 	const canMoveDown =
 		!isGoal && siblings.length > 1 && siblingIndex < siblings.length - 1;
 
-	const hasAnyAction = canMoveUp || canMoveDown;
+	const canInsertParent = !isGoal;
+	const hasAnyAction = canMoveUp || canMoveDown || canInsertParent;
 
 	useEffect(() => {
 		if (!hasAnyAction) {
@@ -666,6 +674,20 @@ function NodeContextMenu({ taskId, x, y, onClose }: NodeContextMenuProps) {
 			className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 min-w-40 select-none"
 			style={{ left: `${String(x)}px`, top: `${String(y)}px` }}
 		>
+			{canInsertParent && (
+				<button
+					type="button"
+					role="menuitem"
+					className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+					onClick={() => {
+						const newTaskId = graph.insertParent(taskId, "");
+						if (newTaskId !== taskId) graph.startEditing(newTaskId);
+						onClose();
+					}}
+				>
+					Insert parent
+				</button>
+			)}
 			{canMoveUp && (
 				<button
 					type="button"

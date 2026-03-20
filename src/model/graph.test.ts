@@ -11,6 +11,7 @@ import {
 	findLeafTasks,
 	findParent,
 	findSiblings,
+	insertParent,
 	isNodeHidden,
 	markDone,
 	markUndone,
@@ -1227,6 +1228,85 @@ describe("moveSiblingUp", () => {
 			{ from: goal.id, to: b.id },
 		]);
 		expect(result).not.toBe(graph);
+	});
+});
+
+describe("insertParent", () => {
+	test("inserts a new parent between parent and child", () => {
+		const goal = createTask("Goal");
+		const child = createTask("Child");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child],
+			dependencies: [{ from: goal.id, to: child.id }],
+		};
+
+		const result = insertParent(graph, child.id, "New parent");
+
+		expect(result.graph.tasks).toHaveLength(3);
+		const newTask = result.graph.tasks.find((t) => t.id === result.newTaskId);
+		expect(newTask).toMatchObject({ label: "New parent", status: "pending" });
+		expect(result.graph.dependencies).toEqual([
+			{ from: goal.id, to: result.newTaskId },
+			{ from: result.newTaskId, to: child.id },
+		]);
+	});
+
+	test("new task preserves sibling order position", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const b = createTask("B");
+		const c = createTask("C");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b, c],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+				{ from: goal.id, to: c.id },
+			],
+		};
+
+		const result = insertParent(graph, b.id, "New parent");
+
+		expect(findChildren(result.graph, goal.id)).toEqual([
+			a.id,
+			result.newTaskId,
+			c.id,
+		]);
+		expect(findChildren(result.graph, result.newTaskId)).toEqual([b.id]);
+	});
+
+	test("no-op when task is the goal", () => {
+		const goal = createTask("Goal");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal],
+		};
+
+		const result = insertParent(graph, goal.id, "Nope");
+
+		expect(result.graph).toBe(graph);
+		expect(result.newTaskId).toBe(goal.id);
+	});
+
+	test("does not mutate original graph", () => {
+		const goal = createTask("Goal");
+		const child = createTask("Child");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child],
+			dependencies: [{ from: goal.id, to: child.id }],
+		};
+
+		insertParent(graph, child.id, "New parent");
+
+		expect(graph.tasks).toHaveLength(2);
+		expect(graph.dependencies).toEqual([{ from: goal.id, to: child.id }]);
 	});
 });
 

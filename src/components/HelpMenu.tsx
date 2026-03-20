@@ -21,6 +21,7 @@ const SHORTCUT_CATEGORIES: readonly ShortcutCategory[] = [
 			["Escape", "Cancel editing"],
 			["d", "Toggle done"],
 			["Delete / Backspace", "Delete task"],
+			["Shift + Tab", "Insert parent"],
 			["Alt + \u2191 / \u2193", "Reorder sibling"],
 		],
 	},

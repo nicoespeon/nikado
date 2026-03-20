@@ -943,6 +943,105 @@ describe("App", () => {
 		});
 	});
 
+	describe("insert parent", () => {
+		it("Shift+Tab creates a new parent and enters edit mode", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Child{Enter}");
+			await waitFor(() =>
+				expect(screen.getByText("Child")).toBeInTheDocument(),
+			);
+
+			const childId = useGraphStore.getState().tasks[1].id;
+			selectNode(childId);
+			await user.keyboard("{Shift>}{Tab}{/Shift}");
+
+			await waitFor(() => {
+				const nodes = document.querySelectorAll(".react-flow__node");
+				expect(nodes).toHaveLength(3);
+			});
+			expect(useGraphStore.getState().editingNodeId).not.toBeNull();
+			expect(useGraphStore.getState().editingNodeId).not.toBe(childId);
+		});
+
+		it("new parent appears between the old parent and the task", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Child{Enter}");
+			await waitFor(() =>
+				expect(screen.getByText("Child")).toBeInTheDocument(),
+			);
+
+			const childId = useGraphStore.getState().tasks[1].id;
+			selectNode(childId);
+			await user.keyboard("{Shift>}{Tab}{/Shift}");
+
+			await waitFor(() => {
+				const state = useGraphStore.getState();
+				const newParentId = state.editingNodeId;
+				expect(newParentId).not.toBeNull();
+				// Goal -> newParent -> Child
+				expect(
+					state.dependencies.find(
+						(d) => d.from === state.goalId && d.to === newParentId,
+					),
+				).toBeTruthy();
+				expect(
+					state.dependencies.find(
+						(d) => d.from === newParentId && d.to === childId,
+					),
+				).toBeTruthy();
+			});
+		});
+
+		it("does nothing on Shift+Tab when goal is selected", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Shift>}{Tab}{/Shift}");
+
+			await waitFor(() => {
+				const nodes = document.querySelectorAll(".react-flow__node");
+				expect(nodes).toHaveLength(1);
+			});
+			expect(useGraphStore.getState().editingNodeId).toBeNull();
+		});
+	});
+
 	describe("URL state persistence", () => {
 		it("updates URL hash after creating a goal", async () => {
 			const user = userEvent.setup();
