@@ -1,5 +1,5 @@
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
 	MAX_LABEL_LENGTH,
 	canMoveTask,
@@ -29,6 +29,19 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 		!canMoveTask(useGraphStore.getState(), movingNodeId, data.taskId);
 	const [draft, setDraft] = useState<string>(data.label || DEFAULT_LABEL);
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
+	const prevStatusRef = useRef(data.status);
+	const [justCompleted, setJustCompleted] = useState(false);
+
+	useEffect(() => {
+		if (data.status === "done" && prevStatusRef.current !== "done") {
+			setJustCompleted(true);
+		}
+		prevStatusRef.current = data.status;
+	}, [data.status]);
+
+	const clearBounce = useCallback(() => {
+		setJustCompleted(false);
+	}, []);
 
 	useEffect(() => {
 		if (!isEditing) return;
@@ -90,10 +103,16 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 			? "opacity-30"
 			: "";
 
+	const bounceStyle = justCompleted
+		? { animation: "task-bounce 350ms ease-out" }
+		: undefined;
+
 	return (
 		<div
 			data-status={data.status}
 			data-leaf={data.isLeaf}
+			style={bounceStyle}
+			onAnimationEnd={clearBounce}
 			className={`rounded-lg shadow-sm w-fit min-w-20 max-w-75 ${statusStyles(data.status, data.isGoal, data.isLeaf)} ${focusRing} ${moveStyles}`}
 		>
 			{renderHandles(data.isGoal)}
@@ -136,7 +155,7 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 								: "border-gray-400 hover:border-gray-600 dark:border-gray-500 dark:hover:border-gray-400"
 						} flex items-center justify-center text-xs`}
 					>
-						{isDone ? "\u2713" : ""}
+						{isDone && <AnimatedCheckmark animate={justCompleted} />}
 					</button>
 					<span className="wrap-break-word">{data.label || DEFAULT_LABEL}</span>
 					{data.hasChildren && (
@@ -237,6 +256,29 @@ function statusStyles(status: string, isGoal: boolean, isLeaf: boolean) {
 	return isLeaf
 		? `${regularSize} border-amber-400 bg-amber-50 dark:border-amber-500 dark:bg-amber-950`
 		: `${regularSize} border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800`;
+}
+
+function AnimatedCheckmark({ animate }: { animate: boolean }) {
+	const strokeStyle = animate
+		? {
+				strokeDasharray: 16,
+				strokeDashoffset: 16,
+				animation: "checkmark-draw 250ms 80ms ease-out forwards",
+			}
+		: undefined;
+
+	return (
+		<svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+			<path
+				d="M2 6l3 3 5-5"
+				stroke="currentColor"
+				strokeWidth="2.5"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				style={strokeStyle}
+			/>
+		</svg>
+	);
 }
 
 function renderHandles(isGoal: boolean) {

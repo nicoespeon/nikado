@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { GITHUB_URL, PURCHASE_URL } from "./config";
 import { CopyMarkdownButton } from "./components/CopyMarkdownButton";
 import { exportGraphAsImage } from "./components/export-image";
+import { GoalCelebration } from "./components/GoalCelebration";
 import { ExportButton } from "./components/ExportButton";
 import { HelpMenu } from "./components/HelpMenu";
 import { LicenseModal } from "./components/LicenseModal";
@@ -667,6 +668,7 @@ function DesktopView() {
 				</Panel>
 				<AutoFitView />
 			</ReactFlow>
+			<GoalCelebration />
 			{movingNodeId && (
 				<div className="absolute top-3 left-1/2 -translate-x-1/2 z-50 bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
 					<span>Move mode: select a new parent</span>

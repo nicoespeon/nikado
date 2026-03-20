@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { GoalCelebration } from "./components/GoalCelebration";
 import { MobileActionBar } from "./components/MobileActionBar";
 import { MobileToolbar } from "./components/MobileToolbar";
 import { OutlineView } from "./components/OutlineView";
@@ -43,6 +44,7 @@ function MobileView() {
 		<div
 			className={`h-full overflow-y-auto bg-white dark:bg-gray-900 pb-20 ${isPro ? "pt-22.5" : "pt-13.25"}`}
 		>
+			<GoalCelebration />
 			<MobileToolbar />
 			{isPro && (
 				<MobileSavedGraphsBar
