@@ -8,6 +8,7 @@ import {
 	createGoal,
 	createTask,
 	createTaskLabel,
+	dissolveTask,
 	findChildren,
 	findLeafTasks,
 	findParent,
@@ -1748,5 +1749,134 @@ describe("findVisibleLayer", () => {
 		};
 
 		expect(findVisibleLayer(graph, b.id)).toEqual([a.id, b.id, c.id]);
+	});
+});
+
+describe("dissolveTask", () => {
+	test("re-attaches children to parent and removes the task", () => {
+		// A -> B -> C, B -> D => dissolve B => A -> C, A -> D
+		const a = createTask("A");
+		const b = createTask("B");
+		const c = createTask("C");
+		const d = createTask("D");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: a.id,
+			tasks: [a, b, c, d],
+			dependencies: [
+				{ from: a.id, to: b.id },
+				{ from: b.id, to: c.id },
+				{ from: b.id, to: d.id },
+			],
+		};
+
+		const result = dissolveTask(graph, b.id);
+
+		expect(result.tasks).toEqual([a, c, d]);
+		expect(result.dependencies).toEqual([
+			{ from: a.id, to: c.id },
+			{ from: a.id, to: d.id },
+		]);
+	});
+
+	test("returns graph unchanged when task is the goal", () => {
+		const goal = createTask("Goal");
+		const child = createTask("Child");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child],
+			dependencies: [{ from: goal.id, to: child.id }],
+		};
+
+		const result = dissolveTask(graph, goal.id);
+
+		expect(result).toBe(graph);
+	});
+
+	test("returns graph unchanged when task is a leaf", () => {
+		const goal = createTask("Goal");
+		const leaf = createTask("Leaf");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, leaf],
+			dependencies: [{ from: goal.id, to: leaf.id }],
+		};
+
+		const result = dissolveTask(graph, leaf.id);
+
+		expect(result).toBe(graph);
+	});
+
+	test("preserves children order", () => {
+		const goal = createTask("Goal");
+		const mid = createTask("Mid");
+		const c1 = createTask("C1");
+		const c2 = createTask("C2");
+		const c3 = createTask("C3");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, mid, c1, c2, c3],
+			dependencies: [
+				{ from: goal.id, to: mid.id },
+				{ from: mid.id, to: c1.id },
+				{ from: mid.id, to: c2.id },
+				{ from: mid.id, to: c3.id },
+			],
+		};
+
+		const result = dissolveTask(graph, mid.id);
+
+		expect(findChildren(result, goal.id)).toEqual([c1.id, c2.id, c3.id]);
+	});
+
+	test("preserves sibling order when dissolved task has siblings", () => {
+		// Goal -> [A, B, C], B -> [X, Y]
+		// Dissolve B => Goal -> [A, X, Y, C]
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const b = createTask("B");
+		const c = createTask("C");
+		const x = createTask("X");
+		const y = createTask("Y");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b, c, x, y],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+				{ from: goal.id, to: c.id },
+				{ from: b.id, to: x.id },
+				{ from: b.id, to: y.id },
+			],
+		};
+
+		const result = dissolveTask(graph, b.id);
+
+		expect(findChildren(result, goal.id)).toEqual([a.id, x.id, y.id, c.id]);
+	});
+
+	test("does not mutate the original graph", () => {
+		const a = createTask("A");
+		const b = createTask("B");
+		const c = createTask("C");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: a.id,
+			tasks: [a, b, c],
+			dependencies: [
+				{ from: a.id, to: b.id },
+				{ from: b.id, to: c.id },
+			],
+		};
+
+		const result = dissolveTask(graph, b.id);
+
+		expect(graph.tasks).toHaveLength(3);
+		expect(graph.dependencies).toHaveLength(2);
+		expect(result).not.toBe(graph);
 	});
 });

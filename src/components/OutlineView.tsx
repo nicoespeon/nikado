@@ -78,6 +78,8 @@ function TaskContextMenu({ taskId, y, onClose }: TaskContextMenuProps) {
 	const canMoveDown =
 		!isGoal && siblings.length > 1 && siblingIndex < siblings.length - 1;
 
+	const hasChildren = findChildren(graph, taskId).length > 0;
+	const canDissolve = !isGoal && hasChildren;
 	const canInsertParent = !isGoal;
 	const canMove = !isGoal;
 
@@ -165,6 +167,19 @@ function TaskContextMenu({ taskId, y, onClose }: TaskContextMenuProps) {
 					}}
 				>
 					Move down
+				</button>
+			)}
+			{canDissolve && (
+				<button
+					type="button"
+					role="menuitem"
+					className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+					onClick={() => {
+						graph.dissolveTask(taskId);
+						onClose();
+					}}
+				>
+					Delete (keep children)
 				</button>
 			)}
 		</div>

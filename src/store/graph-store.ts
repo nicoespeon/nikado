@@ -5,6 +5,7 @@ import {
 	canMoveTask as canMoveTaskInGraph,
 	createGoal,
 	createTask,
+	dissolveTask as dissolveTaskInGraph,
 	findChildren,
 	findParent,
 	insertParent as insertParentInGraph,
@@ -40,6 +41,7 @@ type GraphStore = MikadoGraph &
 		setTaskLabel: (taskId: TaskId, label: string) => void;
 		addDependency: (fromId: TaskId, toId: TaskId) => void;
 		removeTask: (taskId: TaskId) => void;
+		dissolveTask: (taskId: TaskId) => void;
 		setTaskStatus: (taskId: TaskId, status: TaskStatus) => void;
 		toggleDone: (taskId: TaskId) => void;
 		moveSiblingUp: (taskId: TaskId) => void;
@@ -169,6 +171,25 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 			return {
 				...newGraph,
 				goalId: state.goalId === taskId ? null : state.goalId,
+				selectedNodeId: parentId ?? null,
+				editingNodeId: null,
+				collapsedNodes: pruneCollapsed(state.collapsedNodes, taskIds),
+				...h,
+				canUndo: h.past.length > 0,
+				canRedo: false,
+			};
+		});
+	},
+
+	dissolveTask(taskId) {
+		set((state) => {
+			const newGraph = dissolveTaskInGraph(state, taskId);
+			if (newGraph === state) return {};
+			const h = pushHistory(history(state), snapshot(state));
+			const parentId = findParent(state, taskId);
+			const taskIds = new Set(newGraph.tasks.map((t) => t.id));
+			return {
+				...newGraph,
 				selectedNodeId: parentId ?? null,
 				editingNodeId: null,
 				collapsedNodes: pruneCollapsed(state.collapsedNodes, taskIds),

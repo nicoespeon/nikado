@@ -68,6 +68,31 @@ export function setTaskLabel(
 	};
 }
 
+export function dissolveTask(graph: MikadoGraph, taskId: TaskId) {
+	const parentId = findParent(graph, taskId);
+	if (!parentId) return graph;
+
+	const childIds = findChildren(graph, taskId);
+	if (childIds.length === 0) return graph;
+
+	const childEdges = childIds.map((childId) => ({
+		from: parentId,
+		to: childId,
+	}));
+
+	const dependencies = graph.dependencies.flatMap((d) => {
+		if (d.from === parentId && d.to === taskId) return childEdges;
+		if (d.from === taskId) return [];
+		return [d];
+	});
+
+	return {
+		...graph,
+		tasks: graph.tasks.filter((t) => t.id !== taskId),
+		dependencies,
+	};
+}
+
 export function removeTask(graph: MikadoGraph, taskId: TaskId) {
 	const idsToRemove = collectDescendantsToRemove(graph, taskId);
 
