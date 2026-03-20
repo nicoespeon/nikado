@@ -1,4 +1,10 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
@@ -259,6 +265,63 @@ describe("App", () => {
 
 		await waitFor(() => {
 			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+	});
+
+	it("edits the selected sub-node (not the goal) when pressing Space", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+		selectNode(getGoalId());
+		await user.keyboard("{Tab}");
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Child{Enter}");
+		await waitFor(() => expect(screen.getByText("Child")).toBeInTheDocument());
+
+		const childId = useGraphStore.getState().tasks[1].id;
+		selectNode(childId);
+		await user.keyboard(" ");
+
+		await waitFor(() => {
+			expect(useGraphStore.getState().editingNodeId).toBe(childId);
+		});
+	});
+
+	it("enters edit mode on double-click of a node", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+		selectNode(getGoalId());
+		await user.keyboard("{Tab}");
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Child{Enter}");
+		await waitFor(() => expect(screen.getByText("Child")).toBeInTheDocument());
+
+		// fireEvent avoids d3-drag's mousedown handler that errors in jsdom
+		const childNode = getNodeByText("Child");
+		fireEvent.dblClick(childNode);
+
+		const childId = useGraphStore.getState().tasks[1].id;
+		await waitFor(() => {
+			expect(useGraphStore.getState().editingNodeId).toBe(childId);
 		});
 	});
 
@@ -1039,6 +1102,67 @@ describe("App", () => {
 				expect(nodes).toHaveLength(1);
 			});
 			expect(useGraphStore.getState().editingNodeId).toBeNull();
+		});
+	});
+
+	describe("context menu", () => {
+		it("shows Edit action on right-click of a node", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			const goalNode = getNodeByText("Goal");
+			await user.pointer({ keys: "[MouseRight]", target: goalNode });
+
+			await waitFor(() => {
+				expect(
+					screen.getByRole("menuitem", { name: "Edit" }),
+				).toBeInTheDocument();
+			});
+		});
+
+		it("Edit action enters edit mode for the right-clicked node", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Child{Enter}");
+			await waitFor(() =>
+				expect(screen.getByText("Child")).toBeInTheDocument(),
+			);
+
+			const childNode = getNodeByText("Child");
+			await user.pointer({ keys: "[MouseRight]", target: childNode });
+
+			await waitFor(() => {
+				expect(
+					screen.getByRole("menuitem", { name: "Edit" }),
+				).toBeInTheDocument();
+			});
+
+			const childId = useGraphStore.getState().tasks[1].id;
+			await user.click(screen.getByRole("menuitem", { name: "Edit" }));
+
+			await waitFor(() => {
+				expect(useGraphStore.getState().editingNodeId).toBe(childId);
+			});
 		});
 	});
 

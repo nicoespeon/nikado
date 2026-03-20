@@ -87,6 +87,13 @@ function DesktopView() {
 		useGraphStore.getState().selectNode(node.id as TaskId);
 	}, []);
 
+	const onNodeDoubleClick = useCallback(
+		(_event: React.MouseEvent, node: Node) => {
+			useGraphStore.getState().editTask(node.id as TaskId);
+		},
+		[],
+	);
+
 	const onPaneClick = useCallback(() => {
 		useGraphStore.getState().selectNode(null);
 		setNodeContextMenu(null);
@@ -252,7 +259,7 @@ function DesktopView() {
 					const goalId = useGraphStore.getState().goalId;
 					if (goalId) state.startEditing(goalId);
 				} else {
-					state.editTask(state.goalId);
+					state.editTask(selectedNodeId ?? state.goalId);
 				}
 				return;
 			}
@@ -487,6 +494,7 @@ function DesktopView() {
 				nodeTypes={nodeTypes}
 				onNodesChange={onNodesChange}
 				onNodeClick={onNodeClick}
+				onNodeDoubleClick={onNodeDoubleClick}
 				onPaneClick={onPaneClick}
 				onNodeContextMenu={onNodeContextMenu}
 				onInit={(instance) => {
@@ -637,14 +645,8 @@ function NodeContextMenu({ taskId, x, y, onClose }: NodeContextMenuProps) {
 		!isGoal && siblings.length > 1 && siblingIndex < siblings.length - 1;
 
 	const canInsertParent = !isGoal;
-	const hasAnyAction = canMoveUp || canMoveDown || canInsertParent;
 
 	useEffect(() => {
-		if (!hasAnyAction) {
-			onClose();
-			return;
-		}
-
 		function handleClickOutside(e: MouseEvent) {
 			if (
 				menuRef.current &&
@@ -662,9 +664,7 @@ function NodeContextMenu({ taskId, x, y, onClose }: NodeContextMenuProps) {
 			document.removeEventListener("mousedown", handleClickOutside);
 			document.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [onClose, hasAnyAction]);
-
-	if (!hasAnyAction) return null;
+	}, [onClose]);
 
 	return (
 		<div
@@ -674,6 +674,17 @@ function NodeContextMenu({ taskId, x, y, onClose }: NodeContextMenuProps) {
 			className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 min-w-40 select-none"
 			style={{ left: `${String(x)}px`, top: `${String(y)}px` }}
 		>
+			<button
+				type="button"
+				role="menuitem"
+				className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+				onClick={() => {
+					graph.editTask(taskId);
+					onClose();
+				}}
+			>
+				Edit
+			</button>
 			{canInsertParent && (
 				<button
 					type="button"

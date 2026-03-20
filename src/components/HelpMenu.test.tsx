@@ -47,7 +47,7 @@ describe("Help menu", () => {
 		expect(within(dialog).getByText("View")).toBeInTheDocument();
 		expect(within(dialog).getByText("Actions")).toBeInTheDocument();
 		expect(
-			within(dialog).getByText("Create goal / focus goal"),
+			within(dialog).getByText("Create goal / edit label"),
 		).toBeInTheDocument();
 		expect(within(dialog).getByText("Toggle done")).toBeInTheDocument();
 		expect(within(dialog).getByText("Undo")).toBeInTheDocument();

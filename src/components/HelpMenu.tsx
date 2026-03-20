@@ -14,7 +14,7 @@ const SHORTCUT_CATEGORIES: readonly ShortcutCategory[] = [
 	{
 		label: "Tasks",
 		shortcuts: [
-			["Space", "Create goal / focus goal"],
+			["Space", "Create goal / edit label"],
 			["Tab", "Create sub-task"],
 			["Enter", "Create sibling"],
 			["e / F2", "Edit label"],

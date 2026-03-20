@@ -332,7 +332,42 @@ describe("OutlineView", () => {
 			).not.toBeInTheDocument();
 		});
 
-		it("does not show context menu for the goal", async () => {
+		it("shows Edit action for any task", async () => {
+			const user = userEvent.setup();
+			setupGraph({
+				goal: "Goal",
+				children: [{ label: "Child" }],
+			});
+
+			render(<OutlineView />);
+
+			const row = screen.getByText("Child");
+			await user.pointer({ keys: "[MouseRight]", target: row });
+
+			expect(
+				screen.getByRole("menuitem", { name: "Edit" }),
+			).toBeInTheDocument();
+		});
+
+		it("Edit action enters edit mode", async () => {
+			const user = userEvent.setup();
+			setupGraph({
+				goal: "Goal",
+				children: [{ label: "Child" }],
+			});
+
+			render(<OutlineView />);
+
+			const row = screen.getByText("Child");
+			await user.pointer({ keys: "[MouseRight]", target: row });
+
+			await user.click(screen.getByRole("menuitem", { name: "Edit" }));
+
+			const childTask = findTaskByLabel("Child");
+			expect(useGraphStore.getState().editingNodeId).toBe(childTask.id);
+		});
+
+		it("shows Edit action for the goal", async () => {
 			const user = userEvent.setup();
 			setupGraph({ goal: "Goal" });
 
@@ -341,7 +376,9 @@ describe("OutlineView", () => {
 			const row = screen.getByText("Goal");
 			await user.pointer({ keys: "[MouseRight]", target: row });
 
-			expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+			expect(
+				screen.getByRole("menuitem", { name: "Edit" }),
+			).toBeInTheDocument();
 		});
 	});
 
