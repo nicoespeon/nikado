@@ -4,6 +4,7 @@ import {
 	addDependency,
 	addSubTask,
 	canMarkDone,
+	canMoveTask,
 	createGoal,
 	createTask,
 	createTaskLabel,
@@ -15,6 +16,7 @@ import {
 	isNodeHidden,
 	markDone,
 	markUndone,
+	moveTask,
 	moveSiblingDown,
 	moveSiblingUp,
 	removeTask,
@@ -1394,6 +1396,252 @@ describe("moveSiblingDown", () => {
 		};
 
 		const result = moveSiblingDown(graph, a.id);
+
+		expect(graph.dependencies).toEqual([
+			{ from: goal.id, to: a.id },
+			{ from: goal.id, to: b.id },
+		]);
+		expect(result).not.toBe(graph);
+	});
+});
+
+describe("canMoveTask", () => {
+	test("returns true for a valid move", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const b = createTask("B");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+			],
+		};
+
+		expect(canMoveTask(graph, a.id, b.id)).toBe(true);
+	});
+
+	test("returns false when task is the goal", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a],
+			dependencies: [{ from: goal.id, to: a.id }],
+		};
+
+		expect(canMoveTask(graph, goal.id, a.id)).toBe(false);
+	});
+
+	test("returns false when new parent is a descendant of the task", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const b = createTask("B");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: a.id, to: b.id },
+			],
+		};
+
+		expect(canMoveTask(graph, a.id, b.id)).toBe(false);
+	});
+
+	test("returns false when new parent is the current parent", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a],
+			dependencies: [{ from: goal.id, to: a.id }],
+		};
+
+		expect(canMoveTask(graph, a.id, goal.id)).toBe(false);
+	});
+
+	test("returns false when new parent does not exist", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a],
+			dependencies: [{ from: goal.id, to: a.id }],
+		};
+
+		expect(canMoveTask(graph, a.id, "nonexistent" as TaskId)).toBe(false);
+	});
+
+	test("returns false when target is the task itself", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a],
+			dependencies: [{ from: goal.id, to: a.id }],
+		};
+
+		expect(canMoveTask(graph, a.id, a.id)).toBe(false);
+	});
+});
+
+describe("moveTask", () => {
+	test("reparents a task to a new parent", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const b = createTask("B");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+			],
+		};
+
+		const result = moveTask(graph, a.id, b.id);
+
+		expect(findParent(result, a.id)).toBe(b.id);
+		expect(findChildren(result, goal.id)).toEqual([b.id]);
+		expect(findChildren(result, b.id)).toEqual([a.id]);
+	});
+
+	test("preserves the subtree of the moved task", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const a1 = createTask("A1");
+		const b = createTask("B");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, a1, b],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: a.id, to: a1.id },
+				{ from: goal.id, to: b.id },
+			],
+		};
+
+		const result = moveTask(graph, a.id, b.id);
+
+		expect(findChildren(result, a.id)).toEqual([a1.id]);
+		expect(findChildren(result, b.id)).toEqual([a.id]);
+	});
+
+	test("marks new parent undone when moved task is not done", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const b = { ...createTask("B"), status: "done" as const };
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+			],
+		};
+
+		const result = moveTask(graph, a.id, b.id);
+
+		const newParent = result.tasks.find((t) => t.id === b.id);
+		expect(newParent?.status).toBe("pending");
+	});
+
+	test("does not mark new parent undone when moved task is done", () => {
+		const goal = createTask("Goal");
+		const a = { ...createTask("A"), status: "done" as const };
+		const b = { ...createTask("B"), status: "done" as const };
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+			],
+		};
+
+		const result = moveTask(graph, a.id, b.id);
+
+		const newParent = result.tasks.find((t) => t.id === b.id);
+		expect(newParent?.status).toBe("done");
+	});
+
+	test("propagates undone to ancestors of new parent", () => {
+		const goal = { ...createTask("Goal"), status: "done" as const };
+		const a = createTask("A");
+		const b = { ...createTask("B"), status: "done" as const };
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+			],
+		};
+
+		const result = moveTask(graph, a.id, b.id);
+
+		const goalTask = result.tasks.find((t) => t.id === goal.id);
+		expect(goalTask?.status).toBe("pending");
+	});
+
+	test("returns graph unchanged when task is the goal", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a],
+			dependencies: [{ from: goal.id, to: a.id }],
+		};
+
+		const result = moveTask(graph, goal.id, a.id);
+
+		expect(result).toBe(graph);
+	});
+
+	test("returns graph unchanged when moving to current parent", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a],
+			dependencies: [{ from: goal.id, to: a.id }],
+		};
+
+		const result = moveTask(graph, a.id, goal.id);
+
+		expect(result).toBe(graph);
+	});
+
+	test("does not mutate the original graph", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const b = createTask("B");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+			],
+		};
+
+		const result = moveTask(graph, a.id, b.id);
 
 		expect(graph.dependencies).toEqual([
 			{ from: goal.id, to: a.id },

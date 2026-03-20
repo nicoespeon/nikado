@@ -18,6 +18,7 @@ function OutlineView() {
 	const graph = useGraphStore();
 	const collapsedNodes = useGraphStore((s) => s.collapsedNodes);
 	const selectedNodeId = useGraphStore((s) => s.selectedNodeId);
+	const movingNodeId = useGraphStore((s) => s.movingNodeId);
 	const orderedTasks = walkTree(graph, graph.goalId, collapsedNodes);
 	const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
 
@@ -30,6 +31,10 @@ function OutlineView() {
 		setContextMenu(null);
 	}, []);
 
+	const handleTapInMoveMode = useCallback((taskId: TaskId) => {
+		useGraphStore.getState().confirmMove(taskId);
+	}, []);
+
 	return (
 		<div role="tree" aria-label="Mikado graph">
 			{orderedTasks.map((taskId) => (
@@ -39,7 +44,9 @@ function OutlineView() {
 					depth={taskDepth(graph, taskId)}
 					isGoal={taskId === graph.goalId}
 					isSelected={taskId === selectedNodeId}
-					onLongPress={handleLongPress}
+					movingNodeId={movingNodeId}
+					onLongPress={movingNodeId ? undefined : handleLongPress}
+					onTapInMoveMode={movingNodeId ? handleTapInMoveMode : undefined}
 				/>
 			))}
 			{contextMenu && (
@@ -72,6 +79,7 @@ function TaskContextMenu({ taskId, y, onClose }: TaskContextMenuProps) {
 		!isGoal && siblings.length > 1 && siblingIndex < siblings.length - 1;
 
 	const canInsertParent = !isGoal;
+	const canMove = !isGoal;
 
 	useEffect(() => {
 		function handleClickOutside(e: MouseEvent | TouchEvent) {
@@ -118,6 +126,19 @@ function TaskContextMenu({ taskId, y, onClose }: TaskContextMenuProps) {
 					}}
 				>
 					Insert parent
+				</button>
+			)}
+			{canMove && (
+				<button
+					type="button"
+					role="menuitem"
+					className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+					onClick={() => {
+						graph.startMove(taskId);
+						onClose();
+					}}
+				>
+					Move
 				</button>
 			)}
 			{canMoveUp && (

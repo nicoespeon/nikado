@@ -287,6 +287,44 @@ export function moveSiblingDown(graph: MikadoGraph, taskId: TaskId) {
 	return moveSibling(graph, taskId, 1);
 }
 
+export function canMoveTask(
+	graph: MikadoGraph,
+	taskId: TaskId,
+	newParentId: TaskId,
+) {
+	if (taskId === graph.goalId) return false;
+	if (taskId === newParentId) return false;
+	if (!graph.tasks.some((t) => t.id === newParentId)) return false;
+	if (findParent(graph, taskId) === newParentId) return false;
+
+	const descendants = collectDescendants(graph, taskId);
+	return !descendants.has(newParentId);
+}
+
+export function moveTask(
+	graph: MikadoGraph,
+	taskId: TaskId,
+	newParentId: TaskId,
+) {
+	if (!canMoveTask(graph, taskId, newParentId)) return graph;
+
+	const withoutOldEdge = {
+		...graph,
+		dependencies: graph.dependencies.filter(
+			(d) => !(d.to === taskId && d.from === findParent(graph, taskId)),
+		),
+	};
+
+	const withNewEdge = addDependency(withoutOldEdge, newParentId, taskId);
+
+	const task = graph.tasks.find((t) => t.id === taskId);
+	if (task?.status !== "done") {
+		return markUndone(withNewEdge, newParentId);
+	}
+
+	return withNewEdge;
+}
+
 function moveSibling(graph: MikadoGraph, taskId: TaskId, offset: -1 | 1) {
 	const parentId = findParent(graph, taskId);
 	if (!parentId) return graph;

@@ -12,6 +12,7 @@ function resetStore() {
 		dependencies: [],
 		editingNodeId: null,
 		selectedNodeId: null,
+		movingNodeId: null,
 		past: [],
 		future: [],
 		canUndo: false,
@@ -461,6 +462,65 @@ describe("OutlineView", () => {
 			expect(
 				screen.getByText(`8/${String(MAX_LABEL_LENGTH)}`),
 			).toBeInTheDocument();
+		});
+	});
+
+	describe("move task", () => {
+		it("long-press shows Move option", async () => {
+			setupGraph({
+				goal: "Main goal",
+				children: [{ label: "Child A" }, { label: "Child B" }],
+			});
+
+			render(<OutlineView />);
+
+			const childText = screen.getByText("Child A");
+			await userEvent.pointer({
+				keys: "[MouseRight]",
+				target: childText,
+			});
+
+			expect(
+				screen.getByRole("menuitem", { name: "Move" }),
+			).toBeInTheDocument();
+		});
+
+		it("enter move mode, tap target, move executes", async () => {
+			setupGraph({
+				goal: "Main goal",
+				children: [{ label: "Child A" }, { label: "Child B" }],
+			});
+			const childA = findTaskByLabel("Child A");
+			const childB = findTaskByLabel("Child B");
+
+			useGraphStore.getState().startMove(childA.id);
+
+			render(<OutlineView />);
+
+			const targetText = screen.getByText("Child B");
+			await userEvent.click(targetText);
+
+			const state = useGraphStore.getState();
+			expect(state.movingNodeId).toBeNull();
+			const bChildren = state.dependencies
+				.filter((d) => d.from === childB.id)
+				.map((d) => d.to);
+			expect(bChildren).toContain(childA.id);
+		});
+
+		it("cancel button exits move mode", () => {
+			setupGraph({
+				goal: "Main goal",
+				children: [{ label: "Child A" }],
+			});
+			const childA = findTaskByLabel("Child A");
+			useGraphStore.getState().startMove(childA.id);
+
+			expect(useGraphStore.getState().movingNodeId).toBe(childA.id);
+
+			useGraphStore.getState().cancelMove();
+
+			expect(useGraphStore.getState().movingNodeId).toBeNull();
 		});
 	});
 });

@@ -2,6 +2,7 @@ import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { memo, useEffect, useRef, useState } from "react";
 import {
 	MAX_LABEL_LENGTH,
+	canMoveTask,
 	createTaskLabel,
 	findParent,
 } from "../../model/graph";
@@ -18,8 +19,14 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 	const editingNodeId = useGraphStore((s) => s.editingNodeId);
 	const stopEditing = useGraphStore((s) => s.stopEditing);
 	const undo = useGraphStore((s) => s.undo);
+	const movingNodeId = useGraphStore((s) => s.movingNodeId);
 	const isEditing = editingNodeId === data.taskId;
 	const isDone = data.status === "done";
+	const isBeingMoved = movingNodeId === data.taskId;
+	const isInvalidMoveTarget =
+		movingNodeId !== null &&
+		!isBeingMoved &&
+		!canMoveTask(useGraphStore.getState(), movingNodeId, data.taskId);
 	const [draft, setDraft] = useState<string>(data.label || DEFAULT_LABEL);
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -77,11 +84,17 @@ function TaskNodeComponent({ data, selected }: NodeProps<TaskNodeType>) {
 		? "ring-2 ring-blue-500 dark:ring-blue-400 ring-offset-2 dark:ring-offset-gray-900"
 		: "";
 
+	const moveStyles = isBeingMoved
+		? "border-dashed! opacity-50"
+		: isInvalidMoveTarget
+			? "opacity-30"
+			: "";
+
 	return (
 		<div
 			data-status={data.status}
 			data-leaf={data.isLeaf}
-			className={`rounded-lg shadow-sm w-fit min-w-20 max-w-75 ${statusStyles(data.status, data.isGoal, data.isLeaf)} ${focusRing}`}
+			className={`rounded-lg shadow-sm w-fit min-w-20 max-w-75 ${statusStyles(data.status, data.isGoal, data.isLeaf)} ${focusRing} ${moveStyles}`}
 		>
 			{renderHandles(data.isGoal)}
 			{isEditing ? (

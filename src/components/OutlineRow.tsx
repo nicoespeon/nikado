@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
 	MAX_LABEL_LENGTH,
+	canMoveTask,
 	createTaskLabel,
 	findChildren,
 	findLeafTasks,
@@ -15,7 +16,9 @@ type OutlineRowProps = {
 	depth: number;
 	isGoal: boolean;
 	isSelected: boolean;
+	movingNodeId?: TaskId | null;
 	onLongPress?: (taskId: TaskId, y: number) => void;
+	onTapInMoveMode?: (taskId: TaskId) => void;
 };
 
 const DEFAULT_LABEL = createTaskLabel("Do something great");
@@ -27,7 +30,9 @@ function OutlineRowComponent({
 	depth,
 	isGoal,
 	isSelected,
+	movingNodeId,
 	onLongPress,
+	onTapInMoveMode,
 }: OutlineRowProps) {
 	const task = useGraphStore((s) => s.tasks.find((t) => t.id === taskId));
 	const graph = useGraphStore();
@@ -37,6 +42,11 @@ function OutlineRowComponent({
 	const isLeaf = isLeafTask(graph, taskId);
 	const isDone = task?.status === "done";
 	const isParked = task?.status === "parked";
+	const isBeingMoved = movingNodeId === taskId;
+	const isInvalidMoveTarget =
+		movingNodeId != null &&
+		!isBeingMoved &&
+		!canMoveTask(graph, movingNodeId, taskId);
 
 	const editingNodeId = useGraphStore((s) => s.editingNodeId);
 	const isEditing = editingNodeId === taskId;
@@ -144,8 +154,12 @@ function OutlineRowComponent({
 			aria-level={depth + 1}
 			aria-selected={isSelected}
 			style={{ paddingLeft: `${String(depth * 1.5)}rem` }}
-			className={`flex items-center gap-2 px-3 py-2 min-h-[44px] ${rowStyles(isLeaf, isDone, isParked, isSelected)}`}
+			className={`flex items-center gap-2 px-3 py-2 min-h-[44px] ${rowStyles(isLeaf, isDone, isParked, isSelected)} ${isBeingMoved ? "border-dashed opacity-50" : ""} ${isInvalidMoveTarget ? "opacity-30" : ""}`}
 			onClick={() => {
+				if (onTapInMoveMode) {
+					onTapInMoveMode(taskId);
+					return;
+				}
 				selectNode(taskId);
 			}}
 			onTouchStart={handleTouchStart}

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import {
 	addDependency,
 	addSubTask as addSubTaskToGraph,
+	canMoveTask as canMoveTaskInGraph,
 	createGoal,
 	createTask,
 	findChildren,
@@ -9,6 +10,7 @@ import {
 	insertParent as insertParentInGraph,
 	markDone,
 	markUndone,
+	moveTask as moveTaskInGraph,
 	moveSiblingDown as moveSiblingDownInGraph,
 	moveSiblingUp as moveSiblingUpInGraph,
 	removeTask,
@@ -29,6 +31,7 @@ type GraphStore = MikadoGraph &
 	History & {
 		editingNodeId: TaskId | null;
 		selectedNodeId: TaskId | null;
+		movingNodeId: TaskId | null;
 		createGoal: (label: string) => void;
 		createTask: (label: string) => TaskId;
 		addSubTask: (parentId: TaskId, label: string) => TaskId;
@@ -41,6 +44,9 @@ type GraphStore = MikadoGraph &
 		toggleDone: (taskId: TaskId) => void;
 		moveSiblingUp: (taskId: TaskId) => void;
 		moveSiblingDown: (taskId: TaskId) => void;
+		startMove: (taskId: TaskId) => void;
+		confirmMove: (targetId: TaskId) => void;
+		cancelMove: () => void;
 		startEditing: (taskId: TaskId) => void;
 		editTask: (taskId: TaskId) => void;
 		stopEditing: () => void;
@@ -77,6 +83,7 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 	future: [],
 	editingNodeId: null,
 	selectedNodeId: null,
+	movingNodeId: null,
 	canUndo: false,
 	canRedo: false,
 	collapsedNodes: new Set(),
@@ -255,6 +262,33 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 		});
 	},
 
+	startMove(taskId) {
+		set({ movingNodeId: taskId, selectedNodeId: taskId });
+	},
+
+	confirmMove(targetId) {
+		set((state) => {
+			if (!state.movingNodeId) return {};
+			if (!canMoveTaskInGraph(state, state.movingNodeId, targetId)) {
+				return { movingNodeId: null };
+			}
+			const h = pushHistory(history(state), snapshot(state));
+			const newGraph = moveTaskInGraph(state, state.movingNodeId, targetId);
+			return {
+				...newGraph,
+				movingNodeId: null,
+				selectedNodeId: state.movingNodeId,
+				...h,
+				canUndo: h.past.length > 0,
+				canRedo: false,
+			};
+		});
+	},
+
+	cancelMove() {
+		set({ movingNodeId: null });
+	},
+
 	startEditing(taskId) {
 		set({ editingNodeId: taskId, selectedNodeId: taskId });
 	},
@@ -289,6 +323,7 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 				dependencies: [],
 				editingNodeId: null,
 				selectedNodeId: null,
+				movingNodeId: null,
 				collapsedNodes: new Set(),
 				...h,
 				canUndo: h.past.length > 0,
@@ -308,6 +343,7 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 			...result.history,
 			editingNodeId: null,
 			selectedNodeId: null,
+			movingNodeId: null,
 			canUndo: result.history.past.length > 0,
 			canRedo: result.history.future.length > 0,
 			collapsedNodes: pruneCollapsed(state.collapsedNodes, taskIds),
@@ -325,6 +361,7 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 			...result.history,
 			editingNodeId: null,
 			selectedNodeId: null,
+			movingNodeId: null,
 			canUndo: result.history.past.length > 0,
 			canRedo: result.history.future.length > 0,
 			collapsedNodes: pruneCollapsed(state.collapsedNodes, taskIds),

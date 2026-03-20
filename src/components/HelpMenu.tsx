@@ -22,6 +22,7 @@ const SHORTCUT_CATEGORIES: readonly ShortcutCategory[] = [
 			["d", "Toggle done"],
 			["Delete / Backspace", "Delete task"],
 			["Shift + Tab", "Insert parent"],
+			["m", "Move task to new parent"],
 			["Alt + \u2191 / \u2193", "Reorder sibling"],
 		],
 	},

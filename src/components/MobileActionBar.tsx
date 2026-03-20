@@ -10,8 +10,30 @@ const ACTION_BUTTON_CLASS =
 export function MobileActionBar() {
 	const selectedNodeId = useGraphStore((s) => s.selectedNodeId);
 	const editingNodeId = useGraphStore((s) => s.editingNodeId);
+	const movingNodeId = useGraphStore((s) => s.movingNodeId);
+	const cancelMove = useGraphStore((s) => s.cancelMove);
 
 	if (!selectedNodeId || editingNodeId) return null;
+
+	if (movingNodeId) {
+		return (
+			<div
+				className="fixed bottom-0 left-0 right-0 bg-blue-600 text-white px-4 py-3 flex items-center justify-between"
+				style={{
+					paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+				}}
+			>
+				<span className="text-sm font-medium">Tap a task to move here</span>
+				<button
+					type="button"
+					onClick={cancelMove}
+					className="px-4 py-1.5 bg-blue-700 hover:bg-blue-800 rounded text-sm font-medium cursor-pointer"
+				>
+					Cancel
+				</button>
+			</div>
+		);
+	}
 
 	return <ActionButtons selectedId={selectedNodeId} />;
 }

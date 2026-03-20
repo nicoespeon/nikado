@@ -75,6 +75,7 @@ function DesktopView() {
 	const [licenseOpen, setLicenseOpen] = useState(false);
 	const [savedGraphsOpen, setSavedGraphsOpen] = useState(false);
 	const licenseStatus = useLicenseStore((s) => s.license.status);
+	const movingNodeId = useGraphStore((s) => s.movingNodeId);
 	const isEmpty = graph.goalId === null;
 	const selectedNodeId = graph.selectedNodeId;
 
@@ -84,7 +85,12 @@ function DesktopView() {
 	}));
 
 	const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
-		useGraphStore.getState().selectNode(node.id as TaskId);
+		const state = useGraphStore.getState();
+		if (state.movingNodeId) {
+			state.confirmMove(node.id as TaskId);
+			return;
+		}
+		state.selectNode(node.id as TaskId);
 	}, []);
 
 	const onNodeDoubleClick = useCallback(
@@ -95,7 +101,12 @@ function DesktopView() {
 	);
 
 	const onPaneClick = useCallback(() => {
-		useGraphStore.getState().selectNode(null);
+		const state = useGraphStore.getState();
+		if (state.movingNodeId) {
+			state.cancelMove();
+			return;
+		}
+		state.selectNode(null);
 		setNodeContextMenu(null);
 	}, []);
 
@@ -191,6 +202,12 @@ function DesktopView() {
 				return;
 			}
 
+			if (e.key === "Escape" && movingNodeId) {
+				e.preventDefault();
+				useGraphStore.getState().cancelMove();
+				return;
+			}
+
 			if (e.key === "?") {
 				e.preventDefault();
 				setHelpOpen((prev) => !prev);
@@ -206,6 +223,49 @@ function DesktopView() {
 			if (helpOpen) return;
 
 			const state = useGraphStore.getState();
+
+			if (movingNodeId) {
+				if (e.key === "Enter" && selectedNodeId) {
+					e.preventDefault();
+					state.confirmMove(selectedNodeId);
+					return;
+				}
+
+				if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+				if (e.key === "ArrowLeft" && selectedNodeId) {
+					e.preventDefault();
+					const parentId = findParent(state, selectedNodeId);
+					if (parentId) state.selectNode(parentId);
+					return;
+				}
+
+				if (e.key === "ArrowRight" && selectedNodeId) {
+					e.preventDefault();
+					const children = findChildren(state, selectedNodeId);
+					if (children.length > 0) state.selectNode(children[0]);
+					return;
+				}
+
+				if ((e.key === "ArrowUp" || e.key === "ArrowDown") && selectedNodeId) {
+					e.preventDefault();
+					const parentId = findParent(state, selectedNodeId);
+					if (!parentId) return;
+					const allSiblings = findChildren(state, parentId);
+					const currentIndex = allSiblings.indexOf(selectedNodeId);
+					if (currentIndex === -1 || allSiblings.length <= 1) return;
+					const next =
+						e.key === "ArrowDown"
+							? allSiblings[(currentIndex + 1) % allSiblings.length]
+							: allSiblings[
+									(currentIndex - 1 + allSiblings.length) % allSiblings.length
+								];
+					state.selectNode(next);
+					return;
+				}
+
+				return;
+			}
 
 			if (e.key === "z" && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
 				e.preventDefault();
@@ -294,6 +354,12 @@ function DesktopView() {
 			if (e.key === "d" && selectedNodeId) {
 				e.preventDefault();
 				state.toggleDone(selectedNodeId);
+				return;
+			}
+
+			if (e.key === "m" && selectedNodeId) {
+				e.preventDefault();
+				state.startMove(selectedNodeId);
 				return;
 			}
 
@@ -428,6 +494,7 @@ function DesktopView() {
 		savedGraphsOpen,
 		licenseStatus,
 		nodeContextMenu,
+		movingNodeId,
 	]);
 
 	function createGoalOnDoubleClick(event: React.MouseEvent) {
@@ -596,6 +663,20 @@ function DesktopView() {
 				</Panel>
 				<AutoFitView />
 			</ReactFlow>
+			{movingNodeId && (
+				<div className="absolute top-3 left-1/2 -translate-x-1/2 z-50 bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+					<span>Move mode: select a new parent</span>
+					<button
+						type="button"
+						onClick={() => {
+							useGraphStore.getState().cancelMove();
+						}}
+						className="ml-1 px-2 py-0.5 bg-blue-700 hover:bg-blue-800 rounded text-xs cursor-pointer"
+					>
+						Cancel (Esc)
+					</button>
+				</div>
+			)}
 			{helpOpen && (
 				<HelpMenu
 					onClose={() => {
@@ -645,6 +726,7 @@ function NodeContextMenu({ taskId, x, y, onClose }: NodeContextMenuProps) {
 		!isGoal && siblings.length > 1 && siblingIndex < siblings.length - 1;
 
 	const canInsertParent = !isGoal;
+	const canMove = !isGoal;
 
 	useEffect(() => {
 		function handleClickOutside(e: MouseEvent) {
@@ -697,6 +779,19 @@ function NodeContextMenu({ taskId, x, y, onClose }: NodeContextMenuProps) {
 					}}
 				>
 					Insert parent
+				</button>
+			)}
+			{canMove && (
+				<button
+					type="button"
+					role="menuitem"
+					className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+					onClick={() => {
+						graph.startMove(taskId);
+						onClose();
+					}}
+				>
+					Move
 				</button>
 			)}
 			{canMoveUp && (

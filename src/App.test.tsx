@@ -27,6 +27,7 @@ function resetStore() {
 		dependencies: [],
 		editingNodeId: null,
 		selectedNodeId: null,
+		movingNodeId: null,
 		past: [],
 		future: [],
 		canUndo: false,
@@ -1403,6 +1404,164 @@ describe("App", () => {
 			expect(document.querySelector(".react-flow")).not.toBeInTheDocument();
 
 			restore();
+		});
+	});
+
+	describe("move task", () => {
+		it("m key enters move mode, Enter confirms move", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("A{Enter}");
+			await waitFor(() => expect(screen.getByText("A")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("B{Enter}");
+			await waitFor(() => expect(screen.getByText("B")).toBeInTheDocument());
+
+			const childAId = useGraphStore.getState().tasks[1].id;
+			const childBId = useGraphStore.getState().tasks[2].id;
+			selectNode(childAId);
+
+			await user.keyboard("m");
+
+			expect(useGraphStore.getState().movingNodeId).toBe(childAId);
+
+			selectNode(childBId);
+			await user.keyboard("{Enter}");
+
+			const state = useGraphStore.getState();
+			expect(state.movingNodeId).toBeNull();
+			const bChildren = state.dependencies
+				.filter((d) => d.from === childBId)
+				.map((d) => d.to);
+			expect(bChildren).toContain(childAId);
+		});
+
+		it("Escape cancels move mode", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("A{Enter}");
+			await waitFor(() => expect(screen.getByText("A")).toBeInTheDocument());
+
+			const childAId = useGraphStore.getState().tasks[1].id;
+			selectNode(childAId);
+
+			await user.keyboard("m");
+			expect(useGraphStore.getState().movingNodeId).toBe(childAId);
+
+			await user.keyboard("{Escape}");
+			expect(useGraphStore.getState().movingNodeId).toBeNull();
+		});
+
+		it("move is undoable", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("A{Enter}");
+			await waitFor(() => expect(screen.getByText("A")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("B{Enter}");
+			await waitFor(() => expect(screen.getByText("B")).toBeInTheDocument());
+
+			const goalId = getGoalId();
+			const childAId = useGraphStore.getState().tasks[1].id;
+			const childBId = useGraphStore.getState().tasks[2].id;
+
+			selectNode(childAId);
+			await user.keyboard("m");
+			selectNode(childBId);
+			await user.keyboard("{Enter}");
+
+			const movedChildren = useGraphStore
+				.getState()
+				.dependencies.filter((d) => d.from === childBId)
+				.map((d) => d.to);
+			expect(movedChildren).toContain(childAId);
+
+			await user.keyboard("{Meta>}z{/Meta}");
+
+			const undoneChildren = useGraphStore
+				.getState()
+				.dependencies.filter((d) => d.from === goalId)
+				.map((d) => d.to);
+			expect(undoneChildren).toContain(childAId);
+			expect(undoneChildren).toContain(childBId);
+		});
+
+		it("right-click menu offers Move option", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("A{Enter}");
+			await waitFor(() => expect(screen.getByText("A")).toBeInTheDocument());
+
+			const node = getNodeByText("A");
+			await user.pointer({ keys: "[MouseRight]", target: node });
+
+			await waitFor(() => {
+				expect(
+					screen.getByRole("menuitem", { name: "Move" }),
+				).toBeInTheDocument();
+			});
 		});
 	});
 });
