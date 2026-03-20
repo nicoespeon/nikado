@@ -241,6 +241,18 @@ export function taskDepth(graph: MikadoGraph, taskId: TaskId): number {
 	return depth;
 }
 
+export function findVisibleLayer(
+	graph: MikadoGraph,
+	taskId: TaskId,
+	collapsedNodes = new Set<TaskId>(),
+): TaskId[] {
+	if (!graph.goalId) return [];
+
+	const depth = taskDepth(graph, taskId);
+	const visible = walkTree(graph, graph.goalId, collapsedNodes);
+	return visible.filter((id) => taskDepth(graph, id) === depth);
+}
+
 export function isNodeHidden(
 	graph: MikadoGraph,
 	taskId: TaskId,

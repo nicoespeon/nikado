@@ -12,6 +12,7 @@ import {
 	findLeafTasks,
 	findParent,
 	findSiblings,
+	findVisibleLayer,
 	insertParent,
 	isNodeHidden,
 	markDone,
@@ -1648,5 +1649,104 @@ describe("moveTask", () => {
 			{ from: goal.id, to: b.id },
 		]);
 		expect(result).not.toBe(graph);
+	});
+});
+
+describe("findVisibleLayer", () => {
+	test("returns all nodes at the same depth in visual order", () => {
+		// Goal → [One, Two, Three, Four]
+		// Two → [ChildA, ChildB]
+		// Four → [ChildA1]
+		const goal = createTask("Goal");
+		const one = createTask("One");
+		const two = createTask("Two");
+		const three = createTask("Three");
+		const four = createTask("Four");
+		const childA = createTask("Child A");
+		const childB = createTask("Child B");
+		const childA1 = createTask("Child A1");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, one, two, three, four, childA, childB, childA1],
+			dependencies: [
+				{ from: goal.id, to: one.id },
+				{ from: goal.id, to: two.id },
+				{ from: goal.id, to: three.id },
+				{ from: goal.id, to: four.id },
+				{ from: two.id, to: childA.id },
+				{ from: two.id, to: childB.id },
+				{ from: four.id, to: childA1.id },
+			],
+		};
+
+		expect(findVisibleLayer(graph, childA.id)).toEqual([
+			childA.id,
+			childB.id,
+			childA1.id,
+		]);
+	});
+
+	test("excludes nodes hidden by collapsed parents", () => {
+		const goal = createTask("Goal");
+		const two = createTask("Two");
+		const four = createTask("Four");
+		const childA = createTask("Child A");
+		const childB = createTask("Child B");
+		const childA1 = createTask("Child A1");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, two, four, childA, childB, childA1],
+			dependencies: [
+				{ from: goal.id, to: two.id },
+				{ from: goal.id, to: four.id },
+				{ from: two.id, to: childA.id },
+				{ from: two.id, to: childB.id },
+				{ from: four.id, to: childA1.id },
+			],
+		};
+
+		const collapsed = new Set([four.id]);
+		expect(findVisibleLayer(graph, childA.id, collapsed)).toEqual([
+			childA.id,
+			childB.id,
+		]);
+	});
+
+	test("returns only the node itself when no other nodes at same depth", () => {
+		const goal = createTask("Goal");
+		const child = createTask("Child");
+		const grandchild = createTask("Grandchild");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, child, grandchild],
+			dependencies: [
+				{ from: goal.id, to: child.id },
+				{ from: child.id, to: grandchild.id },
+			],
+		};
+
+		expect(findVisibleLayer(graph, grandchild.id)).toEqual([grandchild.id]);
+	});
+
+	test("returns siblings in order for a simple case", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const b = createTask("B");
+		const c = createTask("C");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b, c],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+				{ from: goal.id, to: c.id },
+			],
+		};
+
+		expect(findVisibleLayer(graph, b.id)).toEqual([a.id, b.id, c.id]);
 	});
 });

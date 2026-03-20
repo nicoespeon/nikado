@@ -29,7 +29,12 @@ import {
 import { copyMarkdown } from "./hooks/use-copy-markdown";
 import { copyUrl } from "./hooks/use-share";
 import { cycleTheme, useTheme } from "./hooks/use-theme";
-import { findChildren, findParent, type TaskId } from "./model/graph";
+import {
+	findChildren,
+	findParent,
+	findVisibleLayer,
+	type TaskId,
+} from "./model/graph";
 import { useGraphStore } from "./store/graph-store";
 import { useLicenseStore } from "./store/license-store";
 import { useSavedGraphsStore } from "./store/saved-graphs-store";
@@ -249,17 +254,17 @@ function DesktopView() {
 
 				if ((e.key === "ArrowUp" || e.key === "ArrowDown") && selectedNodeId) {
 					e.preventDefault();
-					const parentId = findParent(state, selectedNodeId);
-					if (!parentId) return;
-					const allSiblings = findChildren(state, parentId);
-					const currentIndex = allSiblings.indexOf(selectedNodeId);
-					if (currentIndex === -1 || allSiblings.length <= 1) return;
+					const layer = findVisibleLayer(
+						state,
+						selectedNodeId,
+						state.collapsedNodes,
+					);
+					const currentIndex = layer.indexOf(selectedNodeId);
+					if (currentIndex === -1 || layer.length <= 1) return;
 					const next =
 						e.key === "ArrowDown"
-							? allSiblings[(currentIndex + 1) % allSiblings.length]
-							: allSiblings[
-									(currentIndex - 1 + allSiblings.length) % allSiblings.length
-								];
+							? layer[(currentIndex + 1) % layer.length]
+							: layer[(currentIndex - 1 + layer.length) % layer.length];
 					state.selectNode(next);
 					return;
 				}
@@ -465,19 +470,18 @@ function DesktopView() {
 
 			if ((e.key === "ArrowUp" || e.key === "ArrowDown") && selectedNodeId) {
 				e.preventDefault();
-				const parentId = findParent(state, selectedNodeId);
-				if (!parentId) return;
-
-				const allSiblings = findChildren(state, parentId);
-				const currentIndex = allSiblings.indexOf(selectedNodeId);
-				if (currentIndex === -1 || allSiblings.length <= 1) return;
+				const layer = findVisibleLayer(
+					state,
+					selectedNodeId,
+					state.collapsedNodes,
+				);
+				const currentIndex = layer.indexOf(selectedNodeId);
+				if (currentIndex === -1 || layer.length <= 1) return;
 
 				const next =
 					e.key === "ArrowDown"
-						? allSiblings[(currentIndex + 1) % allSiblings.length]
-						: allSiblings[
-								(currentIndex - 1 + allSiblings.length) % allSiblings.length
-							];
+						? layer[(currentIndex + 1) % layer.length]
+						: layer[(currentIndex - 1 + layer.length) % layer.length];
 				state.selectNode(next);
 				return;
 			}
