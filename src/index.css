@@ -80,3 +80,8 @@ body {
 		stroke-dashoffset: 0;
 	}
 }
+
+/* Smooth position transitions during sibling reorder */
+.shuffling .react-flow__node {
+	transition: transform 300ms cubic-bezier(0.25, 1, 0.5, 1);
+}

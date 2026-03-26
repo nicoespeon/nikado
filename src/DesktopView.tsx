@@ -81,6 +81,8 @@ function DesktopView() {
 	const [licenseOpen, setLicenseOpen] = useState(false);
 	const [savedGraphsOpen, setSavedGraphsOpen] = useState(false);
 	const licenseStatus = useLicenseStore((s) => s.license.status);
+	const wrapperRef = useRef<HTMLDivElement>(null);
+	const shuffleTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 	const movingNodeId = useGraphStore((s) => s.movingNodeId);
 	const isEmpty = graph.goalId === null;
 	const selectedNodeId = graph.selectedNodeId;
@@ -287,12 +289,14 @@ function DesktopView() {
 
 			if (e.altKey && e.key === "ArrowUp" && selectedNodeId) {
 				e.preventDefault();
+				enableShuffleTransition();
 				state.moveSiblingUp(selectedNodeId);
 				return;
 			}
 
 			if (e.altKey && e.key === "ArrowDown" && selectedNodeId) {
 				e.preventDefault();
+				enableShuffleTransition();
 				state.moveSiblingDown(selectedNodeId);
 				return;
 			}
@@ -512,6 +516,21 @@ function DesktopView() {
 		movingNodeId,
 	]);
 
+	useEffect(() => {
+		return () => {
+			clearTimeout(shuffleTimerRef.current);
+		};
+	}, []);
+
+	function enableShuffleTransition() {
+		if (!wrapperRef.current) return;
+		wrapperRef.current.classList.add("shuffling");
+		clearTimeout(shuffleTimerRef.current);
+		shuffleTimerRef.current = setTimeout(() => {
+			wrapperRef.current?.classList.remove("shuffling");
+		}, 350);
+	}
+
 	function createGoalOnDoubleClick(event: React.MouseEvent) {
 		const isDoubleClick = event.detail === 2;
 		if (!isDoubleClick) return;
@@ -526,6 +545,7 @@ function DesktopView() {
 
 	return (
 		<div
+			ref={wrapperRef}
 			className="relative w-full h-full bg-gray-50 dark:bg-gray-900"
 			onClick={createGoalOnDoubleClick}
 		>
@@ -716,6 +736,7 @@ function DesktopView() {
 					onClose={() => {
 						setNodeContextMenu(null);
 					}}
+					onShuffle={enableShuffleTransition}
 				/>
 			)}
 		</div>
@@ -727,9 +748,16 @@ type NodeContextMenuProps = {
 	x: number;
 	y: number;
 	onClose: () => void;
+	onShuffle: () => void;
 };
 
-function NodeContextMenu({ taskId, x, y, onClose }: NodeContextMenuProps) {
+function NodeContextMenu({
+	taskId,
+	x,
+	y,
+	onClose,
+	onShuffle,
+}: NodeContextMenuProps) {
 	const menuRef = useRef<HTMLDivElement>(null);
 	const graph = useGraphStore();
 	const parentId = findParent(graph, taskId);
@@ -818,6 +846,7 @@ function NodeContextMenu({ taskId, x, y, onClose }: NodeContextMenuProps) {
 					role="menuitem"
 					className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
 					onClick={() => {
+						onShuffle();
 						graph.moveSiblingUp(taskId);
 						onClose();
 					}}
@@ -831,6 +860,7 @@ function NodeContextMenu({ taskId, x, y, onClose }: NodeContextMenuProps) {
 					role="menuitem"
 					className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
 					onClick={() => {
+						onShuffle();
 						graph.moveSiblingDown(taskId);
 						onClose();
 					}}
