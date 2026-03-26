@@ -200,6 +200,29 @@ export function findChildren(graph: MikadoGraph, taskId: TaskId) {
 	return graph.dependencies.filter((d) => d.from === taskId).map((d) => d.to);
 }
 
+export function findSelectionAfterRemove(
+	graph: MikadoGraph,
+	taskId: TaskId,
+): TaskId | null {
+	const parentId = findParent(graph, taskId);
+	if (!parentId) return null;
+
+	const siblings = findChildren(graph, parentId);
+	const index = siblings.indexOf(taskId);
+	if (index < siblings.length - 1) return siblings[index + 1];
+	if (index > 0) return siblings[index - 1];
+	return parentId;
+}
+
+export function findSelectionAfterDissolve(
+	graph: MikadoGraph,
+	taskId: TaskId,
+): TaskId | null {
+	const children = findChildren(graph, taskId);
+	if (children.length > 0) return children[0];
+	return findParent(graph, taskId);
+}
+
 export function findSiblings(graph: MikadoGraph, taskId: TaskId) {
 	const parentId = findParent(graph, taskId);
 	if (!parentId) return [];

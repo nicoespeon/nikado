@@ -8,6 +8,8 @@ import {
 	dissolveTask as dissolveTaskInGraph,
 	findChildren,
 	findParent,
+	findSelectionAfterDissolve,
+	findSelectionAfterRemove,
 	insertParent as insertParentInGraph,
 	markDone,
 	markUndone,
@@ -165,13 +167,13 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 	removeTask(taskId) {
 		set((state) => {
 			const h = pushHistory(history(state), snapshot(state));
-			const parentId = findParent(state, taskId);
+			const nextSelection = findSelectionAfterRemove(state, taskId);
 			const newGraph = removeTask(state, taskId);
 			const taskIds = new Set(newGraph.tasks.map((t) => t.id));
 			return {
 				...newGraph,
 				goalId: state.goalId === taskId ? null : state.goalId,
-				selectedNodeId: parentId ?? null,
+				selectedNodeId: nextSelection,
 				editingNodeId: null,
 				collapsedNodes: pruneCollapsed(state.collapsedNodes, taskIds),
 				...h,
@@ -186,11 +188,11 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 			const newGraph = dissolveTaskInGraph(state, taskId);
 			if (newGraph === state) return {};
 			const h = pushHistory(history(state), snapshot(state));
-			const parentId = findParent(state, taskId);
+			const nextSelection = findSelectionAfterDissolve(state, taskId);
 			const taskIds = new Set(newGraph.tasks.map((t) => t.id));
 			return {
 				...newGraph,
-				selectedNodeId: parentId ?? null,
+				selectedNodeId: nextSelection,
 				editingNodeId: null,
 				collapsedNodes: pruneCollapsed(state.collapsedNodes, taskIds),
 				...h,
@@ -359,11 +361,15 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 		if (!result) return;
 
 		const taskIds = new Set(result.graph.tasks.map((t) => t.id));
+		const preservedSelection =
+			state.selectedNodeId && taskIds.has(state.selectedNodeId)
+				? state.selectedNodeId
+				: null;
 		set({
 			...result.graph,
 			...result.history,
 			editingNodeId: null,
-			selectedNodeId: null,
+			selectedNodeId: preservedSelection,
 			movingNodeId: null,
 			canUndo: result.history.past.length > 0,
 			canRedo: result.history.future.length > 0,
@@ -377,11 +383,15 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 		if (!result) return;
 
 		const taskIds = new Set(result.graph.tasks.map((t) => t.id));
+		const preservedSelection =
+			state.selectedNodeId && taskIds.has(state.selectedNodeId)
+				? state.selectedNodeId
+				: null;
 		set({
 			...result.graph,
 			...result.history,
 			editingNodeId: null,
-			selectedNodeId: null,
+			selectedNodeId: preservedSelection,
 			movingNodeId: null,
 			canUndo: result.history.past.length > 0,
 			canRedo: result.history.future.length > 0,

@@ -12,6 +12,8 @@ import {
 	findChildren,
 	findLeafTasks,
 	findParent,
+	findSelectionAfterDissolve,
+	findSelectionAfterRemove,
 	findSiblings,
 	findVisibleLayer,
 	insertParent,
@@ -1878,5 +1880,119 @@ describe("dissolveTask", () => {
 		expect(graph.tasks).toHaveLength(3);
 		expect(graph.dependencies).toHaveLength(2);
 		expect(result).not.toBe(graph);
+	});
+});
+
+describe("findSelectionAfterRemove", () => {
+	test("returns next sibling when one exists", () => {
+		// Goal -> [A, B, C], removing B => select C
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const b = createTask("B");
+		const c = createTask("C");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b, c],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+				{ from: goal.id, to: c.id },
+			],
+		};
+
+		expect(findSelectionAfterRemove(graph, b.id)).toBe(c.id);
+	});
+
+	test("returns previous sibling when removing the last child", () => {
+		// Goal -> [A, B, C], removing C => select B
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const b = createTask("B");
+		const c = createTask("C");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b, c],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+				{ from: goal.id, to: c.id },
+			],
+		};
+
+		expect(findSelectionAfterRemove(graph, c.id)).toBe(b.id);
+	});
+
+	test("returns parent when task is the only child", () => {
+		const goal = createTask("Goal");
+		const only = createTask("Only");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, only],
+			dependencies: [{ from: goal.id, to: only.id }],
+		};
+
+		expect(findSelectionAfterRemove(graph, only.id)).toBe(goal.id);
+	});
+
+	test("returns null when removing the goal (no parent)", () => {
+		const goal = createTask("Goal");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal],
+			dependencies: [],
+		};
+
+		expect(findSelectionAfterRemove(graph, goal.id)).toBeNull();
+	});
+});
+
+describe("findSelectionAfterDissolve", () => {
+	test("returns first child of the dissolved task", () => {
+		// Goal -> B -> [C, D], dissolve B => select C
+		const goal = createTask("Goal");
+		const b = createTask("B");
+		const c = createTask("C");
+		const d = createTask("D");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, b, c, d],
+			dependencies: [
+				{ from: goal.id, to: b.id },
+				{ from: b.id, to: c.id },
+				{ from: b.id, to: d.id },
+			],
+		};
+
+		expect(findSelectionAfterDissolve(graph, b.id)).toBe(c.id);
+	});
+
+	test("returns parent when task has no children", () => {
+		const goal = createTask("Goal");
+		const leaf = createTask("Leaf");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, leaf],
+			dependencies: [{ from: goal.id, to: leaf.id }],
+		};
+
+		expect(findSelectionAfterDissolve(graph, leaf.id)).toBe(goal.id);
+	});
+
+	test("returns null when task is the goal with no children", () => {
+		const goal = createTask("Goal");
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal],
+			dependencies: [],
+		};
+
+		expect(findSelectionAfterDissolve(graph, goal.id)).toBeNull();
 	});
 });
