@@ -57,9 +57,11 @@ function ActionButtons({ selectedId }: { selectedId: TaskId }) {
 
 function AddSubTaskButton({ selectedId }: { selectedId: TaskId }) {
 	const addSubTask = useGraphStore((s) => s.addSubTask);
+	const expandNode = useGraphStore((s) => s.expandNode);
 	const startEditing = useGraphStore((s) => s.startEditing);
 
 	function handleClick() {
+		expandNode(selectedId);
 		const newId = addSubTask(selectedId, "");
 		startEditing(newId);
 	}

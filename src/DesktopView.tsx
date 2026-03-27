@@ -343,6 +343,7 @@ function DesktopView() {
 
 			if (e.key === "Tab" && selectedNodeId) {
 				e.preventDefault();
+				state.expandNode(selectedNodeId);
 				const newTaskId = state.addSubTask(selectedNodeId, "");
 				state.startEditing(newTaskId);
 				return;

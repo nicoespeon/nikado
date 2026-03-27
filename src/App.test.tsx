@@ -349,6 +349,49 @@ describe("App", () => {
 		expect(useGraphStore.getState().dependencies).toHaveLength(1);
 	});
 
+	it("expands a collapsed node when Tab creates a sub-task", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+		// Create a child
+		selectNode(getGoalId());
+		await user.keyboard("{Tab}");
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Child{Enter}");
+		await waitFor(() => expect(screen.getByText("Child")).toBeInTheDocument());
+
+		// Collapse the goal
+		const goalId = getGoalId();
+		useGraphStore.getState().collapseNode(goalId);
+		await waitFor(() => {
+			expect(screen.queryByText("Child")).not.toBeInTheDocument();
+		});
+
+		// Tab on collapsed goal should expand it and create a new sub-task
+		selectNode(goalId);
+		await user.keyboard("{Tab}");
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("New Child{Enter}");
+		await waitFor(() => {
+			expect(screen.getByText("New Child")).toBeInTheDocument();
+		});
+
+		// Both children should be visible (node was expanded)
+		expect(screen.getByText("Child")).toBeInTheDocument();
+		expect(useGraphStore.getState().collapsedNodes.has(goalId)).toBe(false);
+	});
+
 	it("creates a sibling with Enter when a non-root node is selected", async () => {
 		const user = userEvent.setup();
 		render(<App />);
