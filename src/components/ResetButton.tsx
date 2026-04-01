@@ -1,4 +1,4 @@
-import { useGraphStore } from "../store/graph-store";
+import { resetWithConfirmation, useGraphStore } from "../store/graph-store";
 
 export function ResetButton() {
 	const isEmpty = useGraphStore((s) => s.goalId === null);
@@ -9,9 +9,7 @@ export function ResetButton() {
 			aria-label="Reset (R)"
 			title="Reset (R)"
 			disabled={isEmpty}
-			onClick={() => {
-				useGraphStore.getState().reset();
-			}}
+			onClick={resetWithConfirmation}
 			className="flex items-center justify-center w-7 h-7 rounded bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-sm cursor-pointer disabled:opacity-40 disabled:cursor-default"
 		>
 			<svg

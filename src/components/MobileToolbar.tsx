@@ -2,7 +2,7 @@ import { useState } from "react";
 import { copyMarkdown, useMarkdownCopied } from "../hooks/use-copy-markdown";
 import { copyUrl, useCopied } from "../hooks/use-share";
 import { cycleTheme, useTheme } from "../hooks/use-theme";
-import { useGraphStore } from "../store/graph-store";
+import { resetWithConfirmation, useGraphStore } from "../store/graph-store";
 import { PURCHASE_URL } from "../config";
 import { useLicenseStore } from "../store/license-store";
 import { HelpMenu } from "./HelpMenu";
@@ -226,9 +226,7 @@ function MobileResetButton() {
 			type="button"
 			aria-label="Reset"
 			disabled={isEmpty}
-			onClick={() => {
-				useGraphStore.getState().reset();
-			}}
+			onClick={resetWithConfirmation}
 			className={BUTTON_CLASS}
 		>
 			<svg

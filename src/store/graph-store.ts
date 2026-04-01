@@ -13,9 +13,9 @@ import {
 	insertParent as insertParentInGraph,
 	markDone,
 	markUndone,
-	moveTask as moveTaskInGraph,
 	moveSiblingDown as moveSiblingDownInGraph,
 	moveSiblingUp as moveSiblingUpInGraph,
+	moveTask as moveTaskInGraph,
 	removeTask,
 	setTaskLabel,
 	setTaskStatus,
@@ -25,8 +25,8 @@ import {
 } from "../model/graph";
 import {
 	pushState as pushHistory,
-	undo as undoHistory,
 	redo as redoHistory,
+	undo as undoHistory,
 	type History,
 } from "../model/history";
 
@@ -445,3 +445,24 @@ function pruneCollapsed(collapsedNodes: Set<TaskId>, validIds: Set<TaskId>) {
 	}
 	return pruned;
 }
+
+const RESET_CONFIRM_THRESHOLD = 15;
+
+function resetWithConfirmation() {
+	const state = useGraphStore.getState();
+	const goalTask = state.tasks.find((t) => t.id === state.goalId);
+	const needsConfirm =
+		state.tasks.length > RESET_CONFIRM_THRESHOLD && goalTask?.status !== "done";
+
+	if (
+		needsConfirm &&
+		!window.confirm(
+			"Are you sure you want to start fresh?\nNote: you can always UNDO this 😉",
+		)
+	)
+		return;
+
+	state.reset();
+}
+
+export { resetWithConfirmation };

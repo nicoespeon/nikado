@@ -1,7 +1,8 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "../App";
+import type { TaskId, TaskLabel } from "../model/graph";
 import { useGraphStore } from "../store/graph-store";
 
 function getCanvas() {
@@ -22,6 +23,30 @@ function resetStore() {
 		canUndo: false,
 		canRedo: false,
 	});
+}
+
+function setupLargeGraph({ goalDone = false } = {}) {
+	const goalId = "goal-id" as TaskId;
+	const tasks = [
+		{
+			id: goalId,
+			label: "Goal" as TaskLabel,
+			status: (goalDone ? "done" : "pending") as "done" | "pending",
+		},
+	];
+	const dependencies = [];
+
+	for (let i = 1; i <= 15; i++) {
+		const taskId = `task-${i}` as TaskId;
+		tasks.push({
+			id: taskId,
+			label: `Task ${i}` as TaskLabel,
+			status: "pending",
+		});
+		dependencies.push({ from: goalId, to: taskId });
+	}
+
+	useGraphStore.setState({ goalId, tasks, dependencies });
 }
 
 describe("Reset button", () => {
@@ -102,6 +127,81 @@ describe("Reset button", () => {
 			expect(
 				screen.getByText(/double-click or press space to create your goal/i),
 			).toBeInTheDocument();
+		});
+	});
+
+	describe("confirmation for large graphs", () => {
+		afterEach(() => {
+			vi.restoreAllMocks();
+		});
+
+		it("asks for confirmation when clicking reset with more than 15 tasks", async () => {
+			const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+			const user = userEvent.setup();
+			setupLargeGraph();
+			render(<App />);
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			await user.click(screen.getByRole("button", { name: "Reset (R)" }));
+
+			expect(confirmSpy).toHaveBeenCalled();
+			expect(useGraphStore.getState().goalId).not.toBeNull();
+		});
+
+		it("resets the graph when confirmation is accepted", async () => {
+			vi.spyOn(window, "confirm").mockReturnValue(true);
+			const user = userEvent.setup();
+			setupLargeGraph();
+			render(<App />);
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			await user.click(screen.getByRole("button", { name: "Reset (R)" }));
+
+			await waitFor(() => {
+				expect(useGraphStore.getState().goalId).toBeNull();
+			});
+		});
+
+		it("does not ask for confirmation when goal is completed", async () => {
+			const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+			const user = userEvent.setup();
+			setupLargeGraph({ goalDone: true });
+			render(<App />);
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			await user.click(screen.getByRole("button", { name: "Reset (R)" }));
+
+			expect(confirmSpy).not.toHaveBeenCalled();
+			await waitFor(() => {
+				expect(useGraphStore.getState().goalId).toBeNull();
+			});
+		});
+
+		it("asks for confirmation on 'r' shortcut with large graph", async () => {
+			const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+			const user = userEvent.setup();
+			setupLargeGraph();
+			render(<App />);
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			await user.keyboard("r");
+
+			expect(confirmSpy).toHaveBeenCalled();
+			expect(useGraphStore.getState().goalId).not.toBeNull();
+		});
+
+		it("resets on 'r' shortcut when confirmation is accepted", async () => {
+			vi.spyOn(window, "confirm").mockReturnValue(true);
+			const user = userEvent.setup();
+			setupLargeGraph();
+			render(<App />);
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			await user.keyboard("r");
+
+			await waitFor(() => {
+				expect(useGraphStore.getState().goalId).toBeNull();
+			});
 		});
 	});
 });

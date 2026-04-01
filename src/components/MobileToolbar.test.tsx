@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetMarkdownCopy } from "../hooks/use-copy-markdown";
 import { resetShare } from "../hooks/use-share";
 import { resetTheme } from "../hooks/use-theme";
+import type { TaskId, TaskLabel } from "../model/graph";
 import { useGraphStore } from "../store/graph-store";
 import { MobileToolbar } from "./MobileToolbar";
 
@@ -184,5 +185,76 @@ describe("MobileToolbar", () => {
 		expect(
 			screen.queryByRole("button", { name: /export/i }),
 		).not.toBeInTheDocument();
+	});
+
+	describe("reset confirmation for large graphs", () => {
+		function setupLargeGraph({ goalDone = false } = {}) {
+			const goalId = "goal-id" as TaskId;
+			const tasks = [
+				{
+					id: goalId,
+					label: "Goal" as TaskLabel,
+					status: (goalDone ? "done" : "pending") as "done" | "pending",
+				},
+			];
+			const dependencies = [];
+
+			for (let i = 1; i <= 15; i++) {
+				const taskId = `task-${i}` as TaskId;
+				tasks.push({
+					id: taskId,
+					label: `Task ${i}` as TaskLabel,
+					status: "pending",
+				});
+				dependencies.push({ from: goalId, to: taskId });
+			}
+
+			useGraphStore.setState({ goalId, tasks, dependencies });
+		}
+
+		afterEach(() => {
+			vi.restoreAllMocks();
+		});
+
+		it("asks for confirmation when resetting a large graph", async () => {
+			const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+			const user = userEvent.setup({
+				advanceTimers: vi.advanceTimersByTime,
+			});
+			setupLargeGraph();
+			render(<MobileToolbar />);
+
+			await user.click(screen.getByRole("button", { name: /reset/i }));
+
+			expect(confirmSpy).toHaveBeenCalled();
+			expect(useGraphStore.getState().goalId).not.toBeNull();
+		});
+
+		it("resets when confirmation is accepted", async () => {
+			vi.spyOn(window, "confirm").mockReturnValue(true);
+			const user = userEvent.setup({
+				advanceTimers: vi.advanceTimersByTime,
+			});
+			setupLargeGraph();
+			render(<MobileToolbar />);
+
+			await user.click(screen.getByRole("button", { name: /reset/i }));
+
+			expect(useGraphStore.getState().goalId).toBeNull();
+		});
+
+		it("does not ask for confirmation when goal is completed", async () => {
+			const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+			const user = userEvent.setup({
+				advanceTimers: vi.advanceTimersByTime,
+			});
+			setupLargeGraph({ goalDone: true });
+			render(<MobileToolbar />);
+
+			await user.click(screen.getByRole("button", { name: /reset/i }));
+
+			expect(confirmSpy).not.toHaveBeenCalled();
+			expect(useGraphStore.getState().goalId).toBeNull();
+		});
 	});
 });

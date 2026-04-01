@@ -36,7 +36,7 @@ import {
 	findVisibleLayer,
 	type TaskId,
 } from "./model/graph";
-import { useGraphStore } from "./store/graph-store";
+import { resetWithConfirmation, useGraphStore } from "./store/graph-store";
 import { useLicenseStore } from "./store/license-store";
 import { useSavedGraphsStore } from "./store/saved-graphs-store";
 import {
@@ -392,7 +392,7 @@ function DesktopView() {
 
 			if (e.key === "r" && state.goalId !== null) {
 				e.preventDefault();
-				state.reset();
+				resetWithConfirmation();
 				return;
 			}
 
