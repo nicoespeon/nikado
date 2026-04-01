@@ -297,10 +297,13 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 			}
 			const h = pushHistory(history(state), snapshot(state));
 			const newGraph = moveTaskInGraph(state, state.movingNodeId, targetId);
+			const collapsedNodes = new Set(state.collapsedNodes);
+			collapsedNodes.delete(targetId);
 			return {
 				...newGraph,
 				movingNodeId: null,
 				selectedNodeId: state.movingNodeId,
+				collapsedNodes,
 				...h,
 				canUndo: h.past.length > 0,
 				canRedo: false,

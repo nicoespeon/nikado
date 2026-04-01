@@ -1578,6 +1578,67 @@ describe("App", () => {
 			expect(undoneChildren).toContain(childBId);
 		});
 
+		it("expands collapsed target node when moving a task into it", async () => {
+			const user = userEvent.setup();
+			render(<App />);
+
+			await user.dblClick(getCanvas());
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("Goal{Enter}");
+			await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("A{Enter}");
+			await waitFor(() => expect(screen.getByText("A")).toBeInTheDocument());
+
+			selectNode(getGoalId());
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("B{Enter}");
+			await waitFor(() => expect(screen.getByText("B")).toBeInTheDocument());
+
+			// Add a child to B so it can be collapsed
+			const childBId = useGraphStore.getState().tasks[2].id;
+			selectNode(childBId);
+			await user.keyboard("{Tab}");
+			await waitFor(() => {
+				expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+			});
+			await user.keyboard("B-child{Enter}");
+			await waitFor(() =>
+				expect(screen.getByText("B-child")).toBeInTheDocument(),
+			);
+
+			// Collapse B
+			useGraphStore.getState().collapseNode(childBId);
+			await waitFor(() => {
+				expect(screen.queryByText("B-child")).not.toBeInTheDocument();
+			});
+
+			// Move A into collapsed B
+			const childAId = useGraphStore.getState().tasks[1].id;
+			selectNode(childAId);
+			await user.keyboard("m");
+			selectNode(childBId);
+			await user.keyboard("{Enter}");
+
+			// B should be expanded so the moved node A is visible
+			expect(useGraphStore.getState().collapsedNodes.has(childBId)).toBe(false);
+			expect(screen.getByText("A")).toBeInTheDocument();
+			expect(screen.getByText("B-child")).toBeInTheDocument();
+
+			// Selection should be on the moved node
+			expect(useGraphStore.getState().selectedNodeId).toBe(childAId);
+		});
+
 		it("right-click menu offers Move option", async () => {
 			const user = userEvent.setup();
 			render(<App />);
