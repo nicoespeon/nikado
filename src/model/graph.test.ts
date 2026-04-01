@@ -5,6 +5,7 @@ import {
 	addSubTask,
 	canMarkDone,
 	canMoveTask,
+	computeProgress,
 	createGoal,
 	createTask,
 	createTaskLabel,
@@ -1994,5 +1995,48 @@ describe("findSelectionAfterDissolve", () => {
 		};
 
 		expect(findSelectionAfterDissolve(graph, goal.id)).toBeNull();
+	});
+});
+
+describe("computeProgress", () => {
+	test("returns zero for an empty graph", () => {
+		expect(computeProgress(emptyGraph())).toEqual({ done: 0, total: 0 });
+	});
+
+	test("counts done tasks out of total", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		const b = createTask("B");
+		const c = createTask("C");
+		a.status = "done";
+		b.status = "done";
+
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a, b, c],
+			dependencies: [
+				{ from: goal.id, to: a.id },
+				{ from: goal.id, to: b.id },
+				{ from: goal.id, to: c.id },
+			],
+		};
+
+		expect(computeProgress(graph)).toEqual({ done: 2, total: 4 });
+	});
+
+	test("parked tasks count toward total but not done", () => {
+		const goal = createTask("Goal");
+		const a = createTask("A");
+		a.status = "parked";
+
+		const graph: MikadoGraph = {
+			...emptyGraph(),
+			goalId: goal.id,
+			tasks: [goal, a],
+			dependencies: [{ from: goal.id, to: a.id }],
+		};
+
+		expect(computeProgress(graph)).toEqual({ done: 0, total: 2 });
 	});
 });

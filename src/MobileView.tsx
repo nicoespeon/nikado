@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { GoalCelebration } from "./components/GoalCelebration";
 import { MobileActionBar } from "./components/MobileActionBar";
 import { MobileToolbar } from "./components/MobileToolbar";
+import { ProgressBar } from "./components/ProgressIndicator";
 import { OutlineView } from "./components/OutlineView";
 import { graphName } from "./model/saved-graph";
 import { useGraphStore } from "./store/graph-store";
@@ -52,6 +53,11 @@ function MobileView() {
 					onToggle={toggleSavedGraphs}
 				/>
 			)}
+			<div
+				className={`fixed left-0 right-0 z-30 ${isPro ? "top-[calc(env(safe-area-inset-top)+90px)]" : "top-[calc(env(safe-area-inset-top)+53px)]"}`}
+			>
+				<ProgressBar />
+			</div>
 			<OutlineView />
 			<MobileActionBar />
 		</div>

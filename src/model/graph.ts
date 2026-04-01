@@ -232,6 +232,12 @@ export function findSiblings(graph: MikadoGraph, taskId: TaskId) {
 		.map((d) => d.to);
 }
 
+export function computeProgress(graph: MikadoGraph) {
+	const total = graph.tasks.length;
+	const done = graph.tasks.filter((t) => t.status === "done").length;
+	return { done, total };
+}
+
 export function createTask(label: string): Task {
 	return {
 		id: crypto.randomUUID() as TaskId,

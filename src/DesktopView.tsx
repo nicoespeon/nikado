@@ -11,6 +11,7 @@ import "@xyflow/react/dist/style.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GITHUB_URL, PURCHASE_URL } from "./config";
 import { CopyMarkdownButton } from "./components/CopyMarkdownButton";
+import { ProgressRing } from "./components/ProgressIndicator";
 import { exportGraphAsImage } from "./components/export-image";
 import { GoalCelebration } from "./components/GoalCelebration";
 import { ExportButton } from "./components/ExportButton";
@@ -639,6 +640,7 @@ function DesktopView() {
 						<ExportButton />
 						<CopyMarkdownButton />
 						<ShareButton />
+						<ProgressRing />
 					</div>
 				</Panel>
 				<Panel position="bottom-left">
