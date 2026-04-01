@@ -2,7 +2,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "../App";
-import type { TaskId, TaskLabel } from "../model/graph";
+import type { Task, TaskId, TaskLabel } from "../model/graph";
 import { useGraphStore } from "../store/graph-store";
 
 function getCanvas() {
@@ -27,20 +27,20 @@ function resetStore() {
 
 function setupLargeGraph({ goalDone = false } = {}) {
 	const goalId = "goal-id" as TaskId;
-	const tasks = [
+	const tasks: Task[] = [
 		{
 			id: goalId,
 			label: "Goal" as TaskLabel,
-			status: (goalDone ? "done" : "pending") as "done" | "pending",
+			status: goalDone ? "done" : "pending",
 		},
 	];
 	const dependencies = [];
 
 	for (let i = 1; i <= 15; i++) {
-		const taskId = `task-${i}` as TaskId;
+		const taskId = `task-${String(i)}` as TaskId;
 		tasks.push({
 			id: taskId,
-			label: `Task ${i}` as TaskLabel,
+			label: `Task ${String(i)}` as TaskLabel,
 			status: "pending",
 		});
 		dependencies.push({ from: goalId, to: taskId });
