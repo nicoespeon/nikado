@@ -38,7 +38,7 @@
 		"@types/node": "25.3.3",
 		"@types/react": "19.2.14",
 		"@types/react-dom": "19.2.3",
-		"@vitejs/plugin-react": "5.1.4",
+		"@vitejs/plugin-react": "5.2.0",
 		"@vitest/coverage-v8": "3.2.4",
 		"@vitest/eslint-plugin": "1.6.9",
 		"console-fail-test": "0.6.1",
