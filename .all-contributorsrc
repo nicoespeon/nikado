@@ -12,6 +12,15 @@
         "doc",
         "ideas"
       ]
+    },
+    {
+      "login": "erikbjoern",
+      "name": "Erik Björn",
+      "avatar_url": "https://avatars.githubusercontent.com/u/61984272?v=4",
+      "profile": "https://github.com/erikbjoern",
+      "contributions": [
+        "bug"
+      ]
     }
   ],
   "contributorsPerLine": 7,

@@ -5,7 +5,7 @@
 <p align="center">
 	<!-- prettier-ignore-start -->
 	<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-	<a href="#contributors" target="_blank"><img alt="👪 All Contributors: 1" src="https://img.shields.io/badge/%F0%9F%91%AA_all_contributors-1-21bb42.svg" /></a>
+	<a href="#contributors" target="_blank"><img alt="👪 All Contributors: 2" src="https://img.shields.io/badge/%F0%9F%91%AA_all_contributors-2-21bb42.svg" /></a>
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 	<!-- prettier-ignore-end -->
 	<a href="https://github.com/nicoespeon/nikado/blob/main/.github/CODE_OF_CONDUCT.md" target="_blank"><img alt="🤝 Code of Conduct: Kept" src="https://img.shields.io/badge/%F0%9F%A4%9D_code_of_conduct-kept-21bb42" /></a>
@@ -88,7 +88,8 @@ Built by [Nicolas Carlo](https://understandlegacycode.com). Made with 💜 in Ca
 <table>
   <tbody>
     <tr>
-      <td align="center"><a href="https://understandlegacycode.com/"><img src="https://avatars.githubusercontent.com/u/1094774?v=4?s=100" width="100px;" alt="Nicolas Carlo"/><br /><sub><b>Nicolas Carlo</b></sub></a><br /><a href="https://github.com/nicoespeon/nikado/commits?author=nicoespeon" title="Code">💻</a> <a href="https://github.com/nicoespeon/nikado/commits?author=nicoespeon" title="Documentation">📖</a> <a href="#ideas-nicoespeon" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/erikbjoern"><img src="https://avatars.githubusercontent.com/u/61984272?v=4?s=100" width="100px;" alt="Erik Björn"/><br /><sub><b>Erik Björn</b></sub></a><br /><a href="https://github.com/nicoespeon/nikado/issues?q=author%3Aerikbjoern" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://understandlegacycode.com/"><img src="https://avatars.githubusercontent.com/u/1094774?v=4?s=100" width="100px;" alt="Nicolas Carlo"/><br /><sub><b>Nicolas Carlo</b></sub></a><br /><a href="https://github.com/nicoespeon/nikado/commits?author=nicoespeon" title="Code">💻</a> <a href="https://github.com/nicoespeon/nikado/commits?author=nicoespeon" title="Documentation">📖</a> <a href="#ideas-nicoespeon" title="Ideas, Planning, & Feedback">🤔</a></td>
     </tr>
   </tbody>
 </table>
