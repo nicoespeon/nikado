@@ -222,6 +222,12 @@ function DesktopView() {
 				return;
 			}
 
+			if (e.key === "Escape" && selectedNodeId) {
+				e.preventDefault();
+				useGraphStore.getState().selectNode(null);
+				return;
+			}
+
 			if (e.key === "?") {
 				e.preventDefault();
 				setHelpOpen((prev) => !prev);

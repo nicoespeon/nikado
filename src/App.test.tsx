@@ -269,6 +269,25 @@ describe("App", () => {
 		});
 	});
 
+	it("deselects the selected node when pressing Escape", async () => {
+		const user = userEvent.setup();
+		render(<App />);
+
+		await user.dblClick(getCanvas());
+		await waitFor(() => {
+			expect(screen.getByLabelText("Task label")).toBeInTheDocument();
+		});
+		await user.keyboard("Goal{Enter}");
+		await waitFor(() => expect(screen.getByText("Goal")).toBeInTheDocument());
+
+		selectNode(getGoalId());
+		expect(useGraphStore.getState().selectedNodeId).toBe(getGoalId());
+
+		await user.keyboard("{Escape}");
+
+		expect(useGraphStore.getState().selectedNodeId).toBeNull();
+	});
+
 	it("does not enter edit mode when Space is held (user intent is to pan)", async () => {
 		const user = userEvent.setup();
 		render(<App />);
