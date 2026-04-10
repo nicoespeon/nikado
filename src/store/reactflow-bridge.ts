@@ -1,4 +1,8 @@
-import dagre from "@dagrejs/dagre";
+import dagre, {
+	type EdgeLabel,
+	type GraphLabel,
+	type NodeLabel,
+} from "@dagrejs/dagre";
 import type { Edge, Node } from "@xyflow/react";
 import {
 	findChildren,
@@ -94,7 +98,7 @@ function computeLayout(graph: MikadoGraph, nodeSizes: NodeSizes) {
 	const result = new Map<TaskId, { x: number; y: number }>();
 	if (!graph.goalId) return result;
 
-	const g = new dagre.graphlib.Graph();
+	const g = new dagre.graphlib.Graph<GraphLabel, NodeLabel, EdgeLabel>();
 	g.setGraph({ rankdir: "LR", ranksep: 70, nodesep: 20 });
 	g.setDefaultEdgeLabel(() => ({}));
 
