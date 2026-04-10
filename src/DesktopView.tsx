@@ -179,6 +179,11 @@ function DesktopView() {
 	);
 
 	useEffect(() => {
+		// A pressed Space triggers edit mode on keyup (tap), but a held Space
+		// is a pan gesture and should not trigger anything. We detect hold via
+		// the `repeat` flag on the second keydown.
+		let spaceTapPending = false;
+
 		function handleKeyDown(e: KeyboardEvent) {
 			const active = document.activeElement;
 			if (
@@ -325,13 +330,11 @@ function DesktopView() {
 
 			if (e.key === " ") {
 				e.preventDefault();
-				if (state.goalId === null) {
-					state.createGoal("");
-					const goalId = useGraphStore.getState().goalId;
-					if (goalId) state.startEditing(goalId);
-				} else {
-					state.editTask(selectedNodeId ?? state.goalId);
+				if (e.repeat) {
+					spaceTapPending = false;
+					return;
 				}
+				spaceTapPending = true;
 				return;
 			}
 
@@ -504,9 +507,26 @@ function DesktopView() {
 			}
 		}
 
+		function handleKeyUp(e: KeyboardEvent) {
+			if (e.key !== " ") return;
+			if (!spaceTapPending) return;
+			spaceTapPending = false;
+
+			const state = useGraphStore.getState();
+			if (state.goalId === null) {
+				state.createGoal("");
+				const goalId = useGraphStore.getState().goalId;
+				if (goalId) state.startEditing(goalId);
+			} else {
+				state.editTask(selectedNodeId ?? state.goalId);
+			}
+		}
+
 		window.addEventListener("keydown", handleKeyDown);
+		window.addEventListener("keyup", handleKeyUp);
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
+			window.removeEventListener("keyup", handleKeyUp);
 		};
 	}, [
 		selectedNodeId,
