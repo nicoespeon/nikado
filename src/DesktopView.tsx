@@ -64,7 +64,7 @@ function AutoFitView() {
 function DesktopView() {
 	const { resolvedTheme, theme } = useTheme();
 	const graph = useGraphStore();
-	const [nodeSizes, setNodeSizes] = useState<NodeSizes>(new Map());
+	const [nodeSizes, setNodeSizes] = useState<NodeSizes>(() => new Map());
 	const pendingNodeSizes = useRef<NodeSizes | null>(null);
 	const editingNodeId = useGraphStore((s) => s.editingNodeId);
 	const reactFlowRef = useRef<{
