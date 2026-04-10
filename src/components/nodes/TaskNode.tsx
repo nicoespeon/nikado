@@ -240,22 +240,17 @@ function CollapseButton({
 }
 
 function statusStyles(status: string, isGoal: boolean, isLeaf: boolean) {
-	const goalSize = "border-2 px-6 py-3 text-lg font-semibold";
-	const regularSize = "border px-4 py-2 text-sm";
-
-	if (isGoal) {
-		return status === "done"
-			? `${goalSize} border-green-600 bg-green-50 dark:border-green-500 dark:bg-green-950 opacity-70`
-			: `${goalSize} border-blue-600 bg-blue-50 dark:border-blue-500 dark:bg-blue-950`;
-	}
+	const size = isGoal
+		? "border-2 px-6 py-3 text-lg font-semibold"
+		: "border px-4 py-2 text-sm";
 
 	if (status === "done") {
-		return `${regularSize} border-green-500 bg-green-50 dark:border-green-600 dark:bg-green-950 opacity-60`;
+		return `${size} border-green-500 bg-green-50 dark:border-green-600 dark:bg-green-950 opacity-60`;
 	}
 
 	return isLeaf
-		? `${regularSize} border-amber-400 bg-amber-50 dark:border-amber-500 dark:bg-amber-950`
-		: `${regularSize} border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800`;
+		? `${size} border-amber-400 bg-amber-50 dark:border-amber-500 dark:bg-amber-950`
+		: `${size} border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800`;
 }
 
 function AnimatedCheckmark({ animate }: { animate: boolean }) {
