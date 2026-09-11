@@ -1,0 +1,20 @@
+name: Polar License Health Check
+
+on:
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch: ~
+
+jobs:
+  validate_license:
+    name: Validate test license key
+    runs-on: ubuntu-latest
+    env:
+      POLAR_TEST_LICENSE_KEY: ${{ secrets.POLAR_TEST_LICENSE_KEY }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/prepare
+      # Without the secret, the test is skipped and the check would pass silently.
+      - name: Require the test license key
+        run: test -n "$POLAR_TEST_LICENSE_KEY" || { echo "::error::Missing POLAR_TEST_LICENSE_KEY secret"; exit 1; }
+      - run: pnpm test --run src/adapters/polar-sh-license-gateway.live.test.ts
