@@ -93,8 +93,9 @@ For all docs, specs, and comments in this project:
 - Bullet points over paragraphs when listing facts or rules.
 - No filler ("In other words", "It's worth noting", "Essentially").
 
-## PR Conventions
+## Git Workflow
 
-- Titles follow conventional commits: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`
-- Keep PRs single-purpose
+- Maintainer commits go straight to `main`, after local QA. Pushing to `main` deploys.
+- PRs are for external contributors. Keep them single-purpose.
+- Commit messages and PR titles follow conventional commits: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`
 - CI runs: build, lint, test, type-check. All must pass.
