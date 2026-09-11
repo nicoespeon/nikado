@@ -126,7 +126,7 @@ export const useLicenseStore = create<LicenseStore>((set, get) => ({
 				set({ license: { status: "inactive" } });
 			}
 		} catch {
-			// Network error during revalidation: keep the cached license
+			// Couldn't check with Polar: keep the cached license
 		}
 	},
 }));
