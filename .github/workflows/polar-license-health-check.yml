@@ -12,7 +12,7 @@ jobs:
     env:
       POLAR_TEST_LICENSE_KEY: ${{ secrets.POLAR_TEST_LICENSE_KEY }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/prepare
       # Without the secret, the test is skipped and the check would pass silently.
       - name: Require the test license key
